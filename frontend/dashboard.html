@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard | EXO GLOBAL</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    async function downloadBackup() {
+        try {
+            const res = await fetch('/api/backup/tickets', { headers: { Authorization: `Bearer ${token}` } });
+            if (!res.ok) return alert('Backup failed or unauthorized');
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'EXO_TICKETS_BACKUP_' + new Date().getTime() + '.json';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            alert('✅ Secure Database Backup Downloaded Successfully!');
+        } catch(e) { console.error('Backup error:', e); alert('Failed to download backup.'); }
+    }
+</script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+
+:root{
+            --bg:#f1f5f9;
+            --surface:#ffffff;
+            --border:#334155;
+            --border-soft:#94a3b8;
+            --text-main:#1e293b;
+            --text-light:#64748b;
+            --primary:#1e293b;
+            --primary-dark:#0f172a;
+            --accent:#475569;
+            --success:#16a34a;
+            --danger:#dc2626;
+            --warning:#d97706;
+            --pink-bg:#f1f5f9;
+            --pink-light:#e2e8f0;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text-main);height:100vh;display:flex;overflow:hidden;font-size:13px}
+
+/* ── SIDEBAR ── */
+        #sidebar{width:250px;background:#1e293b;border-right:2px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+        .logo{height:72px;padding:0 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.logo-icon{width:52px;height:52px;border-radius:8px;background:transparent;display:flex;align-items:center;justify-content:center;overflow:hidden;border:none}
+        .logo-icon img{width:100%;height:100%;object-fit:contain;border-radius:8px}
+.logo-text{font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;color:#fff}
+        nav{flex:1;padding:18px 12px;display:flex;flex-direction:column;gap:6px}
+.nav-link{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:4px;color:#ffffff;text-decoration:none;font-weight:600;transition:.2s;border:1px solid transparent;font-size:13px}
+        .nav-link:hover{background:var(--border-soft);border-color:var(--border)}
+        .nav-link.active{background:rgba(14,165,233,0.15);border:1px solid var(--primary);box-shadow:inset 3px 0 0 var(--primary)}
+        .nav-link .count-badge{background:var(--primary);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px;margin-left:auto}
+
+/* ── MAIN ── */
+        main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;background:#f1f5f9}
+        header{height:72px;border-bottom:2px solid var(--border);padding:0 26px;display:flex;align-items:center;justify-content:space-between;background:var(--surface)}
+        header h1{font-family:'Outfit',sans-serif;font-size:22px;color:var(--primary);font-weight:800}
+        .top-right{display:flex;align-items:center;gap:16px}
+        .top-right-profile{display:flex;align-items:center;gap:10px;padding-left:16px;border-left:1px solid var(--border)}
+        .top-right-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+
+        /* ── DASHBOARD GRID ── */
+        .dashboard-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:20px}
+        .dashboard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+        .bento-card{background:var(--surface);border:2px solid var(--border);border-radius: 6px;padding:16px;display:flex;flex-direction:column;transition:border-color .2s,box-shadow .2s}
+        .bento-card:hover{border-color:var(--primary);box-shadow:0 4px 20px rgba(14,165,233,0.15)}
+        .card-lg{grid-column:span 2}
+        .card-full{grid-column:span 4}
+        .card-tall{grid-row:span 2}
+.kpi-title{font-size:13px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px}
+        .kpi-val{font-family:'Outfit',sans-serif;font-size:36px;font-weight:800;color:#1e293b}
+        .kpi-trend{font-size:11px;margin-top:6px;color:var(--success)}
+        .chart-container{position:relative;width:100%;height:220px}
+
+        /* ── STAFF PROFILES ── */
+        .activity-list{margin-top:8px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:320px}
+        .activity-item{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--border-soft);background:#fff;border-radius: 4px;transition:background .2s}
+        .activity-item:hover{background:var(--pink-bg)}
+        .user-dot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0}
+
+        /* ── SECTIONS ── */
+        #leavesSection,#attendanceSection{display:none;flex-direction:column;flex:1;padding:20px;gap:14px;overflow-y:auto}
+        .panel{border:2px solid var(--border-soft);border-radius: 6px;padding:20px;background:#fff}
+        .panel h2{font-family:'Outfit',sans-serif;color:var(--primary);margin-bottom:14px;font-size:18px}
+        .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+        .input,select{padding:9px 12px;border:1px solid var(--border-soft);border-radius: 4px;font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s}
+        .input:focus,select:focus{border-color:var(--primary)}
+        .btn{border:none;border-radius: 4px;padding:9px 14px;font-weight:700;cursor:pointer;font-size:12px;transition:transform .1s,box-shadow .2s;font-family:'Inter',sans-serif}
+        .btn:active{transform:scale(.97)}
+        .btn-primary{background:linear-gradient(135deg,var(--primary),#a855f7);color:#fff;box-shadow:0 2px 10px rgba(0,0,128,.25)}
+        .btn-success{background:var(--success);color:#fff}
+        .btn-danger{background:var(--danger);color:#fff}
+        .btn-warning{background:#7c3aed;color:#fff}
+        .btn-soft{background:var(--pink-bg);color:var(--primary);border:1px solid var(--border-soft)}
+        .btn-soft:hover{background:var(--pink-light)}
+
+        /* ── TABLE ── */
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:12px 14px;border-bottom:1px solid var(--pink-light);text-align:left;vertical-align:top;font-size:13px}
+        th{font-size:11px;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;background:var(--pink-bg);font-weight:700}
+        tr:hover td{background:var(--pink-bg)}
+        .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700}
+        .badge-pending{background:#fef3c7;color:#92400e}
+        .badge-ok{background:#dcfce7;color:#166534}
+        .badge-no{background:#fee2e2;color:#991b1b}
+        .badge-hold{background:#ede9fe;color:#5b21b6}
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar{width:6px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:var(--border-soft);border-radius:99px}
+        ::-webkit-scrollbar-thumb:hover{background:var(--border)}
+    
+        .bento-card { background: var(--surface); border: 2px solid var(--border-soft); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; transition: border-color .2s, box-shadow .2s; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .kpi-title { font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 6px; }
+        .kpi-val { font-family: 'Outfit', sans-serif; font-size: 30px; font-weight: 800; color: #111827; }
+        .chart-container { position: relative; width: 100%; height: 220px; }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+    <aside id="sidebar">
+        <div class="logo">
+<div class="logo-icon"><img src="logo.png" style="width:44px;height:44px;border-radius:6px;object-fit:contain;"></div>
+            <div class="logo-text">EXO GLOBAL</div>
+        </div>
+        <nav>
+            <a href="javascript:void(0)" class="nav-link active"><i class="fa-solid fa-house"></i> Dashboard</a>
+            <a href="employees.html" class="nav-link"><i class="fa-solid fa-users"></i> Employees</a>
+            <a href="attendance.html" class="nav-link"><i class="fa-solid fa-user-check"></i> Attendance</a>
+            <a href="tickets.html" class="nav-link"><i class="fa-solid fa-ticket"></i> Tickets</a>
+            <a href="chat.html" class="nav-link"><i class="fa-solid fa-message"></i> Chat</a>
+            <a href="meeting.html" class="nav-link"><i class="fa-solid fa-video"></i> Live Meeting</a>
+            <a href="documents.html" class="nav-link"><i class="fa-solid fa-folder-open"></i> Documents</a>
+            <a href="undertakings.html" class="nav-link" id="navUndertakings" style="display:none;"><i class="fa-solid fa-handshake"></i> Undertakings</a>
+            <div style="flex:1"></div>
+            <a href="javascript:void(0)" onclick="logout()" class="nav-link" style="color:var(--danger)"><i class="fa-solid fa-power-off"></i> Logout</a>
+        </nav>
+    </aside>
+
+    <main>
+        <header>
+            <h1 id="dashboardTitle">Command Center</h1>
+            <div class="top-right">
+<button onclick="downloadBackup()" id="backupBtn" style="padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 4px; cursor:pointer; font-weight: 600; font-size: 11px; display:flex; align-items:center; gap:6px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);"><i class="fa-solid fa-cloud-arrow-down"></i> Secure DB Backup</button>
+                <i class="fa-regular fa-bell" style="font-size:20px;color:var(--primary);cursor:pointer"></i>
+                <div class="top-right-profile">
+                    <div style="text-align:right">
+                        <div style="font-weight:700;font-size:13px;color:var(--primary)" id="userName">User</div>
+                    </div>
+                    <div class="top-right-avatar" id="userInitial">U</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-scroll">
+            
+            <div style="margin-bottom:20px;">
+                <div id="greeting" style="font-size: 24px; font-weight: 800; font-family:'Outfit'; color: var(--primary);">Loading...</div>
+                <div style="font-size: 13px; color: var(--text-light); margin-top: 4px;" id="dateStr">Loading date...</div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="dashboard-grid">
+                <div class="bento-card">
+                    <div class="kpi-title"><i class="fa-solid fa-users" style="color:var(--primary)"></i> Total Workforce</div>
+                    <div class="kpi-val" id="kpi-total-emp">0</div>
+                    <div class="kpi-trend"><i class="fa-solid fa-arrow-up" style="color:var(--success)"></i> Updated Live</div>
+                </div>
+                <div class="bento-card">
+                    <div class="kpi-title"><i class="fa-solid fa-user-check" style="color:var(--success)"></i> Present Today</div>
+                    <div class="kpi-val" id="kpi-present">0</div>
+                    <div class="kpi-trend" id="kpi-attendance-pct">0%</div>
+                </div>
+                <div class="bento-card">
+                    <div class="kpi-title"><i class="fa-solid fa-ticket" style="color:var(--accent)"></i> Raised Tickets</div>
+                    <div class="kpi-val" id="kpi-raised">0</div>
+                    <div class="kpi-trend">Total Active</div>
+                </div>
+                <div class="bento-card">
+                    <div class="kpi-title"><i class="fa-solid fa-spinner" style="color:var(--warning)"></i> Pending Tickets</div>
+                    <div class="kpi-val" id="kpi-pending">0</div>
+                    <div class="kpi-trend">Awaiting action</div>
+                </div>
+                <div class="bento-card">
+                    <div class="kpi-title"><i class="fa-solid fa-check-double" style="color:var(--success)"></i> Completed Tickets</div>
+                    <div class="kpi-val" id="kpi-finished">0</div>
+                    <div class="kpi-trend">Resolved</div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                <div class="bento-card">
+<div class="kpi-title">Ticket Status Distribution</div>
+                    <div class="chart-container"><canvas id="ticketLineChart"></canvas></div>
+                </div>
+                <div class="bento-card">
+                    <div class="kpi-title">Ticket Priorities</div>
+                    <div class="chart-container"><canvas id="priorityPieChart"></canvas></div>
+                </div>
+            </div>
+
+<!-- My To-Do + Reminders + Today's Operations -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                <!-- MY TO-DO LIST -->
+                <div class="bento-card" style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="font-size:14px;font-weight:700;color:var(--primary);padding-bottom:8px;border-bottom:2px solid var(--border);">
+                        <i class="fa-solid fa-list-check"></i> My To-Do
+                    </div>
+                    <div style="display:flex;gap:6px;">
+                        <input type="text" id="dashTdTitle" placeholder="Add task..." style="flex:1;padding:8px 10px;font-size:12px;border:1px solid var(--border);border-radius:4px;">
+                        <button onclick="dashAddTodo()" style="background:var(--primary);color:white;border:none;border-radius:4px;padding:8px 12px;cursor:pointer;font-weight:600;font-size:11px;">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    <div id="dashMyTodoList" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px;max-height:200px;">
+                    </div>
+                </div>
+
+                <!-- REMINDERS -->
+                <div class="bento-card" style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="font-size:14px;font-weight:700;color:var(--primary);padding-bottom:8px;border-bottom:2px solid var(--border);">
+                        <i class="fa-solid fa-bell"></i> Reminders
+                    </div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <input type="text" id="dashRemMsg" placeholder="Reminder..." style="flex:1;min-width:80px;padding:8px 10px;font-size:12px;border:1px solid var(--border);border-radius:4px;">
+                        <input type="date" id="dashRemDate" style="width:100px;padding:8px;font-size:12px;border:1px solid var(--border);border-radius:4px;">
+                        <button onclick="dashAddReminder()" style="background:var(--primary);color:white;border:none;border-radius:4px;padding:8px 12px;cursor:pointer;font-weight:600;font-size:11px;">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    <div id="dashRemindersList" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px;max-height:200px;">
+                    </div>
+                </div>
+
+                <!-- TODAY'S OPERATIONS -->
+                <div class="bento-card" style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="font-size:14px;font-weight:700;color:var(--primary);padding-bottom:8px;border-bottom:2px solid var(--border);">
+                        <i class="fa-solid fa-bolt"></i> Today's Operations
+                    </div>
+                    <div style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:8px;">
+                        <div style="border:1px solid var(--border-soft);border-radius:6px;padding:10px;">
+                            <div style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:6px;">
+                                <i class="fa-solid fa-bell" style="color:#f59e0b;"></i> Today's Reminders
+                            </div>
+                            <div id="opsReminders" style="font-size:11px;color:var(--text-light);">No reminders today</div>
+                        </div>
+                        <div style="border:1px solid var(--border-soft);border-radius:6px;padding:10px;">
+                            <div style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:6px;">
+                                <i class="fa-solid fa-ticket" style="color:#3b82f6;"></i> Active Tickets
+                            </div>
+                            <div id="opsTickets" style="font-size:11px;color:var(--text-light);">Loading...</div>
+                        </div>
+                        <div style="border:1px solid var(--border-soft);border-radius:6px;padding:10px;">
+                            <div style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:6px;">
+                                <i class="fa-solid fa-comments" style="color:#10b981;"></i> Recent Messages
+                            </div>
+                            <div id="opsChat" style="font-size:11px;color:var(--text-light);">No new messages</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+</div>
+
+        </div>
+    
+<!-- ═══ MY TO-DO SECTION ═══ -->
+<section id="todoSection" style="display:none;flex-direction:column;flex:1;padding:20px;gap:14px;overflow-y:auto;background:var(--bg);">
+    <div class="card" style="flex:1;">
+        <div class="card-header" style="font-size:18px; color:var(--primary);"><i class="fa-solid fa-list-check"></i> My To-Do List</div>
+        <div class="card-body" style="padding:20px;">
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <input type="text" id="tdTitle" class="input" placeholder="Task description..." style="flex:1;">
+                <input type="month" id="tdMonth" class="input" title="Monthly Reminder Date">
+                <button class="btn" style="background:var(--primary); color:white;" onclick="saveTodo()"><i class="fa-solid fa-plus"></i> Add To-Do</button>
+            </div>
+            <div id="todoContainer" style="display:flex; flex-direction:column; gap:10px;">
+                <div style="color:var(--text-light); text-align:center;">Loading...</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+</main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/notifications.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/';
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        document.getElementById('userName').innerText = user.name || user.fullName || 'User';
+        document.getElementById('userInitial').innerText = (user.name || user.fullName || 'U').charAt(0).toUpperCase();
+
+        // Dynamic greeting based on time of day
+        const empId = (user.employeeId || '').toUpperCase();
+        const h = new Date().getHours();
+        const greeting = h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening';
+        let greetingText = '';
+        let titleText = 'Command Center';
+        if (empId === 'EXO-001') { greetingText = `${greeting}, Mr. Chairman!`; titleText = 'Chairman Command Center'; }
+        else if (empId === 'EXO-002') { greetingText = `${greeting}, Mr. CEO!`; titleText = 'CEO Command Center'; }
+        else if (empId === 'EXO-101') { greetingText = `${greeting}, Mr. IT Admin!`; titleText = 'IT Admin Command Center'; }
+        else if (empId === 'EXO-201') { greetingText = `${greeting}, Ms. HR!`; titleText = 'HR Command Center'; }
+        else { greetingText = `${greeting}, ${user.name || user.fullName || 'Employee'}!`; titleText = 'Employee Dashboard'; }
+        
+        document.getElementById('greeting').innerText = greetingText;
+        document.getElementById('dashboardTitle').innerText = titleText;
+        
+        if (['HR', 'HR Manager', 'CEO', 'Chairman'].includes(user.role)) {
+            document.getElementById('navUndertakings').style.display = 'block';
+        }
+        
+        // Ensure nav links use unified dashboard
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            if (link.innerText.includes('Dashboard')) {
+                link.href = 'dashboard.html';
+            }
+        });
+
+        function logout() { localStorage.clear(); window.location.href = '/'; }
+
+document.getElementById('dateStr').innerText = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+        // Role-based visibility
+        const isExecutive = ['IT Admin', 'CEO', 'Chairman'].includes(user.role);
+        const isHR = ['HR', 'HR Manager'].includes(user.role);
+        
+        // Hide backup button for non-executives
+        if (!isExecutive) {
+            const backupBtn = document.getElementById('backupBtn');
+            if (backupBtn) backupBtn.style.display = 'none';
+        }
+        
+        // Hide operations throughput table for non-HR/non-executives (show only personal)
+        const globalTodoTable = document.getElementById('dashGlobalTodoTable');
+        if (globalTodoTable && !isExecutive && !isHR) {
+            // Don't load global todos for regular employees
+            globalTodoTable.parentElement.parentElement.parentElement.style.display = 'none';
+        }
+
+        async function initDashboard() {
+            try {
+                const res = await fetch('/api/stats', { headers: { Authorization: `Bearer ${token}` } });
+                const d = await res.json();
+
+                document.getElementById('kpi-total-emp').innerText = d.summary?.totalEmployees || 0;
+                document.getElementById('kpi-present').innerText = d.summary?.presentToday || 0;
+                document.getElementById('kpi-raised').innerText = d.summary?.totalTickets || 0;
+                document.getElementById('kpi-pending').innerText = d.summary?.pendingTickets || 0;
+                document.getElementById('kpi-finished').innerText = d.summary?.completedTickets || 0;
+
+                let attendancePct = 0;
+                if(d.summary?.totalEmployees > 0) attendancePct = Math.round((d.summary.presentToday / d.summary.totalEmployees) * 100);
+                document.getElementById('kpi-attendance-pct').innerText = attendancePct + '%';
+
+                initCharts(d);
+            } catch(e) { console.error(e); }
+        }
+
+function initCharts(data) {
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = '#64748b';
+            Chart.defaults.scale.grid.color = 'rgba(0,0,0,0.04)';
+
+        const lineCtx = document.getElementById('ticketLineChart').getContext('2d');
+        const g1 = lineCtx.createLinearGradient(0, 0, 0, 400);
+        g1.addColorStop(0, '#3b82f6'); g1.addColorStop(1, '#2563eb');
+        const g2 = lineCtx.createLinearGradient(0, 0, 0, 400);
+        g2.addColorStop(0, '#10b981'); g2.addColorStop(1, '#059669');
+        const g3 = lineCtx.createLinearGradient(0, 0, 0, 400);
+        g3.addColorStop(0, '#f59e0b'); g3.addColorStop(1, '#d97706');
+
+        new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: ['Working', 'Completed', 'Pending'],
+                datasets: [{
+                    label: 'Tickets',
+                    data: [
+                        data.summary?.ticketsByStatus?.Working || 0,
+                        data.summary?.ticketsByStatus?.Completed || 0,
+                        data.summary?.pendingTickets || 0
+                    ],
+                    backgroundColor: [g1, g2, g3],
+                    borderColor: [g1, g2, g3],
+                    fill: false,
+                    tension: 0.3,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { backgroundColor: '#1e293b', titleFont: { size: 13, family: 'Outfit' }, bodyFont: { size: 12 }, padding: 10, cornerRadius: 8 }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.05)', borderDash: [5, 5] },
+                        ticks: { precision: 0, font: { family: 'Inter' } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: 'Inter', weight: '600' } }
+                    }
+                }
+            }
+        });
+
+            const pieCtx = document.getElementById('priorityPieChart').getContext('2d');
+            const p1 = pieCtx.createLinearGradient(0, 0, 0, 400);
+            p1.addColorStop(0, '#ef4444'); p1.addColorStop(1, '#b91c1c');
+            const p2 = pieCtx.createLinearGradient(0, 0, 0, 400);
+            p2.addColorStop(0, '#f59e0b'); p2.addColorStop(1, '#d97706');
+            const p3 = pieCtx.createLinearGradient(0, 0, 0, 400);
+            p3.addColorStop(0, '#3b82f6'); p3.addColorStop(1, '#2563eb');
+
+            new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['High', 'Medium', 'Low'],
+                    datasets: [{
+                        label: 'Tickets',
+                        data: [
+                            data.summary?.ticketsByPriority?.High || 0,
+                            data.summary?.ticketsByPriority?.Medium || 0,
+                            data.summary?.ticketsByPriority?.Low || 0
+                        ],
+                        backgroundColor: [p1, p2, p3],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: '#1e293b', titleFont: { size: 13, family: 'Outfit' }, bodyFont: { size: 12 }, padding: 10, cornerRadius: 8 }
+                    }
+                }
+            });
+        }
+
+// API-based To-Do and Reminders (Role-based)
+        // Note: isExecutive and isHR already defined above for role-based visibility
+        
+        async function loadLists() {
+            try {
+                // Fetch Personal To-Dos (everyone sees only their own tasks)
+                const tdRes = await fetch('/api/todos', { headers: { Authorization: `Bearer ${token}` } });
+                const todos = await tdRes.json();
+                const tdHtml = todos.map(t => `<div style="padding:10px; border:1px solid #e2e8f0; border-radius:6px; display:flex; justify-content:space-between;"><span style="font-size:13px;">${t.title}</span><i class="fa-solid fa-trash" style="color:#ef4444;cursor:pointer;" onclick="delTodo(${t.id})"></i></div>`).join('');
+                document.getElementById('dashMyTodoList').innerHTML = todos.length ? tdHtml : '<div style="color:#94a3b8;text-align:center;padding:20px;font-size:13px;">No tasks.</div>';
+
+                // Fetch Personal Reminders (everyone sees only their own)
+                const remRes = await fetch('/api/reminders/my', { headers: { Authorization: `Bearer ${token}` } });
+                const rems = await remRes.json();
+                const remHtml = rems.map(r => {
+                    const dt = new Date(r.reminderDateTime);
+                    const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    const timeStr = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    return `<div style="padding:10px; border:1px solid #e2e8f0; border-radius:6px; display:flex; justify-content:space-between;align-items:center;"><div><span style="font-size:13px;">${r.message}</span><span style="font-size:11px;color:#64748b;margin-left:8px;">📅 ${dateStr} ⏰ ${timeStr}</span></div><i class="fa-solid fa-trash" style="color:#ef4444;cursor:pointer;" onclick="delRem(${r.id})"></i></div>`;
+                }).join('');
+                document.getElementById('dashRemindersList').innerHTML = rems.length ? remHtml : '<div style="color:#94a3b8;text-align:center;padding:20px;font-size:13px;">No reminders.</div>';
+            } catch(e) {
+                console.error('Failed to load lists:', e);
+            }
+        }
+
+        async function dashAddTodo() {
+            const val = document.getElementById('dashTdTitle').value;
+            const monthVal = document.getElementById('dashTdMonth')?.value || '';
+            if(!val) return;
+            try {
+                await fetch('/api/todos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ title: val, reminderMonth: monthVal || null })
+                });
+                document.getElementById('dashTdTitle').value = '';
+                if(document.getElementById('dashTdMonth')) document.getElementById('dashTdMonth').value = '';
+                loadLists();
+                dashLoadMyTodos();
+            } catch(e) { console.error(e); }
+        }
+
+        async function delTodo(id) {
+            if(!confirm("Delete this To-Do?")) return;
+            try {
+                await fetch(`/api/todos/${id}`, {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                loadLists();
+                dashLoadMyTodos();
+            } catch(e) { console.error(e); }
+        }
+
+        async function dashAddReminder() {
+            const val = document.getElementById('dashRemMsg').value;
+            const dateVal = document.getElementById('dashRemDate')?.value;
+            const timeVal = document.getElementById('dashRemTime')?.value;
+            
+            if(!val) return;
+            try {
+                // Combine date and time
+                let reminderDT;
+                if (dateVal && timeVal) {
+                    reminderDT = new Date(`${dateVal}T${timeVal}`);
+                } else if (dateVal) {
+                    reminderDT = new Date(`${dateVal}T09:00`);
+                } else {
+                    // Default to next hour
+                    reminderDT = new Date();
+                    reminderDT.setHours(reminderDT.getHours() + 1);
+                }
+                
+                await fetch('/api/reminders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ message: val, reminderDateTime: reminderDT.toISOString(), isPublic: false })
+                });
+                document.getElementById('dashRemMsg').value = '';
+                if(document.getElementById('dashRemDate')) document.getElementById('dashRemDate').value = '';
+                if(document.getElementById('dashRemTime')) document.getElementById('dashRemTime').value = '';
+                loadLists();
+            } catch(e) { console.error(e); }
+        }
+
+        async function delRem(id) {
+            if(!confirm("Delete this Reminder?")) return;
+            try {
+                await fetch(`/api/reminders/${id}`, {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                loadLists();
+            } catch(e) { console.error(e); }
+        }
+
+        initDashboard();
+        loadLists();
+    
+// ── DASHBOARD TODO WIDGET ──
+async function dashLoadMyTodos() {
+    const list = document.getElementById('dashMyTodoList');
+    if (!list) return;
+    try {
+        const res = await fetch('/api/todos', { headers: { Authorization: `Bearer ${token}` } });
+        const todos = await res.json();
+        list.innerHTML = '';
+        const active = Array.isArray(todos) ? todos.filter(t => !t.isDeleted) : [];
+        if (!active.length) {
+            list.innerHTML = '<div style="color:var(--text-light);text-align:center;padding:20px;font-size:13px;">No tasks yet. Add one above!</div>';
+            return;
+        }
+        active.forEach(t => {
+            const item = document.createElement('div');
+            item.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#f8fafc;border:1px solid var(--border);border-radius:4px;';
+            item.innerHTML = `
+                <div>
+                    <div style="font-weight:600;font-size:13px;color:var(--text-main);">${t.title}</div>
+                    ${t.reminderMonth ? `<div style="font-size:11px;color:#4f46e5;margin-top:2px;"><i class="fa-solid fa-calendar-days"></i> ${t.reminderMonth}</div>` : ''}
+                </div>
+                <button onclick="dashDoneTodo(${t.id})" style="background:#16a34a;color:white;border:none;border-radius:4px;padding:5px 12px;cursor:pointer;font-size:12px;font-weight:700;display:flex;align-items:center;gap:5px;flex-shrink:0;">
+                    <i class="fa-solid fa-check"></i> Done
+                </button>`;
+            list.appendChild(item);
+        });
+    } catch(e) { console.error('dashLoadMyTodos error:', e); }
+}
+
+async function dashAddTodo() {
+    const titleEl = document.getElementById('dashTdTitle');
+    const monthEl = document.getElementById('dashTdMonth');
+    const title = titleEl ? titleEl.value.trim() : '';
+    const month = monthEl ? monthEl.value : '';
+    if (!title) { alert('Please enter a task description'); return; }
+    try {
+        await fetch('/api/todos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ title, reminderMonth: month || null })
+        });
+        if (titleEl) titleEl.value = '';
+        if (monthEl) monthEl.value = '';
+        await dashLoadMyTodos();
+        await dashLoadGlobalTodos();
+    } catch(e) { console.error('dashAddTodo error:', e); }
+}
+
+async function dashDoneTodo(id) {
+    try {
+        await fetch(`/api/todos/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        await dashLoadMyTodos();
+        await dashLoadGlobalTodos();
+    } catch(e) { console.error('dashDoneTodo error:', e); }
+}
+
+async function dashLoadGlobalTodos() {
+    const tbody = document.getElementById('dashGlobalTodoTable');
+    if (!tbody) return;
+    try {
+        const res = await fetch('/api/todos/all', { headers: { Authorization: `Bearer ${token}` } });
+        const todos = await res.json();
+        tbody.innerHTML = '';
+        if (!Array.isArray(todos) || !todos.length) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-light);font-size:13px;">No tasks in pipeline yet</td></tr>';
+            return;
+        }
+        todos.forEach(t => {
+            const name = t.User ? t.User.fullName : 'Unknown';
+            const role = t.User ? t.User.role : '';
+            const done = t.isDeleted;
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid var(--border)';
+            tr.innerHTML = `
+                <td style="padding:10px 12px;">
+                    <div style="font-weight:600;font-size:13px;">${name}</div>
+                    <div style="font-size:10px;color:var(--text-light);">${role}</div>
+                </td>
+                <td style="padding:10px 12px;font-size:13px;${done ? 'text-decoration:line-through;color:var(--text-light);' : ''}">${t.title}</td>
+                <td style="padding:10px 12px;">
+                    <span style="padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#eef2ff;color:#4f46e5;">${t.reminderMonth || '—'}</span>
+                </td>
+                <td style="padding:10px 12px;">
+                    ${done
+                        ? '<span style="color:#16a34a;font-weight:700;font-size:12px;"><i class="fa-solid fa-check-circle"></i> Done</span>'
+                        : '<span style="color:#d97706;font-weight:700;font-size:12px;"><i class="fa-solid fa-clock"></i> Pending</span>'
+                    }
+                </td>`;
+            tbody.appendChild(tr);
+        });
+    } catch(e) { console.error('dashLoadGlobalTodos error:', e); }
+}
+
+dashLoadMyTodos();
+dashLoadGlobalTodos();
+
+async function loadDashReminders(){
+    try {
+        const res = await fetch('/api/reminders/my', { headers: { Authorization: "Bearer " + token } });
+        const data = await res.json();
+        const list = document.getElementById('dashRemindersList');
+        if(!list) return;
+        list.innerHTML = '';
+        if(!data || data.length === 0) {
+            list.innerHTML = '<div style="color:var(--text-light);text-align:center;padding:20px;font-size:13px;">No upcoming reminders.</div>';
+            return;
+        }
+        
+        const todayStr = new Date().toISOString().slice(0, 10);
+        
+        data.forEach(r => {
+            const isToday = r.reminderDateTime && r.reminderDateTime.slice(0, 10) === todayStr;
+            const rDate = new Date(r.reminderDateTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            
+            const div = document.createElement('div');
+            div.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid var(--border-soft);border-radius:8px;background:" + (isToday ? 'var(--pink-light)' : '#fff') + ";border-left: 4px solid " + (isToday ? 'var(--primary)' : 'var(--border)') + ";";
+            div.innerHTML = "<div>" +
+                    "<div style='font-weight:700;color:var(--text-main);font-size:13px;display:flex;align-items:center;gap:6px;'>" +
+                        r.message + (isToday ? " <span class='badge badge-pending' style='padding:2px 6px;font-size:9px;'>TODAY</span>" : "") +
+                    "</div>" +
+                    "<div style='font-size:11px;color:var(--text-light);margin-top:4px;'>" +
+                        "<i class='fa-regular fa-clock'></i> " + rDate +
+                    "</div>" +
+                "</div>";
+            list.appendChild(div);
+        });
+    } catch(e) { console.error('Error loading reminders:', e); }
+}
+</script>
+</body>
+</html>
