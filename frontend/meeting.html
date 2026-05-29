@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Meeting | EXO GLOBAL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0a192f;
+            --accent: #1d4ed8;
+            --bg: #111827;
+            --surface: #1f2937;
+            --border: #374151;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
+
+        #sidebar { width: 220px; background: #0a192f; border-right: none; display: flex; flex-direction: column; flex-shrink: 0; color: #ffffff; }
+        .logo { height: 60px; padding: 0 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .nav-list { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 4px; color: rgba(255,255,255,0.7); text-decoration: none; font-weight: 500; transition: 0.2s; }
+        .nav-item:hover { background: #1f2937; color: #ffffff; }
+
+        main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        header { height: 80px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; flex-shrink: 0; }
+        header h1 { font-family: 'Outfit'; font-size: 24px; font-weight: 800; }
+
+        .meeting-room { flex: 1; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; width: 100%; max-width: 1000px; height: 60vh; }
+        .video-box { background: #000; border-radius: 16px; overflow: hidden; position: relative; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; }
+        .video-box video { width: 100%; height: 100%; object-fit: cover; }
+        .user-label { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.6); color: white; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; backdrop-filter: blur(4px); }
+        
+        .controls { margin-top: 30px; display: flex; gap: 15px; background: var(--surface); padding: 15px 30px; border-radius: 30px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .control-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: #374151; color: white; font-size: 18px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .control-btn:hover { background: #4b5563; transform: scale(1.05); }
+        .control-btn.danger { background: #ef4444; }
+        .control-btn.danger:hover { background: #dc2626; }
+
+        .setup-screen { background: var(--surface); padding: 40px; border-radius: 20px; border: 1px solid var(--border); text-align: center; max-width: 400px; width: 100%; }
+        .setup-screen h2 { margin-bottom: 20px; font-family: 'Outfit'; }
+        .setup-screen select, .setup-screen input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: white; margin-bottom: 15px; }
+        .setup-btn { background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; font-size: 16px; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            #sidebar { width: 100%; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 10px; }
+            .logo { border: none; width: 100%; justify-content: center; }
+            .nav-list { flex-direction: row; padding: 0; width: 100%; overflow-x: auto; }
+            .nav-item { white-space: nowrap; }
+            .video-grid { height: 40vh; }
+        }
+    </style>
+</head>
+<body>
+
+    <aside id="sidebar">
+        <div class="logo"><i class="fa-solid fa-gem"></i> EXO GLOBAL</div>
+        <div class="nav-list">
+            <a href="dashboard.html" class="nav-item" id="navDash"><i class="fa-solid fa-house"></i> Dashboard</a>
+            <a href="chat.html" class="nav-item"><i class="fa-solid fa-message"></i> Messages</a>
+            <a href="tickets.html" class="nav-item"><i class="fa-solid fa-ticket"></i> Tickets</a>
+            <a href="meeting.html" class="nav-item active"><i class="fa-solid fa-video"></i> Meetings</a>
+            <div style="flex:1;"></div>
+            <a href="#" onclick="logout(event)" class="nav-item" style="color:#ef4444;"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        </div>
+    </aside>
+
+    <main>
+        <header>
+            <h1>Live Meeting Room</h1>
+        </header>
+
+        <div class="meeting-room" id="setupRoom">
+            <div class="setup-screen">
+                <i class="fa-solid fa-video" style="font-size: 40px; color: var(--accent); margin-bottom: 20px;"></i>
+                <h2>Join Meeting</h2>
+                <input type="text" id="meetingId" placeholder="Enter Meeting ID or leave blank to start new">
+                <button class="setup-btn" onclick="joinMeeting()"><i class="fa-solid fa-right-to-bracket"></i> Join Now</button>
+            </div>
+        </div>
+
+        <div class="meeting-room" id="activeRoom" style="display: none;">
+            <div style="position:absolute; top:20px; left:30px; font-weight:700; font-family:'Outfit';">
+                Meeting ID: <span id="displayMeetingId" style="color:var(--accent);">---</span>
+            </div>
+            
+            <div class="video-grid" id="videoGrid">
+                <div class="video-box" id="myVideoBox">
+                    <video id="myVideo" autoplay muted playsinline></video>
+                    <div class="user-label" id="myNameLabel">Me</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="control-btn" id="micBtn" onclick="toggleMic()"><i class="fa-solid fa-microphone"></i></button>
+                <button class="control-btn" id="camBtn" onclick="toggleCam()"><i class="fa-solid fa-video"></i></button>
+                <button class="control-btn" onclick="inviteUsers()"><i class="fa-solid fa-user-plus"></i></button>
+                <button class="control-btn danger" onclick="leaveMeeting()"><i class="fa-solid fa-phone-slash"></i></button>
+            </div>
+        </div>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/';
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        // Set correct dashboard link
+        const dashMap = { 'Chairman':'dashboard.html', 'CEO':'dashboard.html', 'IT Admin':'dashboard.html', 'HR': 'dashboard.html' };
+        document.getElementById('navDash').href = dashMap[user.role] || 'dashboard.html';
+
+        function logout(e) { e.preventDefault(); localStorage.clear(); window.location.href = 'index.html'; }
+
+        // Meeting Logic
+        let localStream;
+        let isMicOn = true;
+        let isCamOn = true;
+        let currentRoom = null;
+
+        document.getElementById('myNameLabel').innerText = user.name || user.fullName || 'Me';
+
+        // Connect Socket
+        const socket = io({ auth: { token } });
+        socket.on('connect', () => console.log('Meeting socket connected'));
+
+        async function initMedia() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('myVideo').srcObject = localStream;
+            } catch (e) {
+                console.error("Camera access denied", e);
+                alert("Camera and Microphone access is required for meetings.");
+            }
+        }
+
+        async function joinMeeting() {
+            const inputId = document.getElementById('meetingId').value.trim();
+            currentRoom = inputId || 'EXO-' + Math.floor(1000 + Math.random() * 9000);
+            
+            document.getElementById('setupRoom').style.display = 'none';
+            document.getElementById('activeRoom').style.display = 'flex';
+            document.getElementById('displayMeetingId').innerText = currentRoom;
+            
+            await initMedia();
+
+            // Notify backend
+            socket.emit('join_meeting', currentRoom);
+            
+            socket.on('user_joined_meeting', (data) => {
+                console.log('User joined:', data.userId);
+                // Create a dummy box to represent the other user
+                const box = document.createElement('div');
+                box.className = 'video-box';
+                box.innerHTML = `<div style="color:white;"><i class="fa-solid fa-user" style="font-size:40px;"></i></div><div class="user-label">Participant</div>`;
+                document.getElementById('videoGrid').appendChild(box);
+            });
+        }
+
+        function toggleMic() {
+            if(!localStream) return;
+            isMicOn = !isMicOn;
+            localStream.getAudioTracks()[0].enabled = isMicOn;
+            const btn = document.getElementById('micBtn');
+            btn.innerHTML = isMicOn ? '<i class="fa-solid fa-microphone"></i>' : '<i class="fa-solid fa-microphone-slash"></i>';
+            btn.style.background = isMicOn ? '#374151' : '#ef4444';
+        }
+
+        function toggleCam() {
+            if(!localStream) return;
+            isCamOn = !isCamOn;
+            localStream.getVideoTracks()[0].enabled = isCamOn;
+            const btn = document.getElementById('camBtn');
+            btn.innerHTML = isCamOn ? '<i class="fa-solid fa-video"></i>' : '<i class="fa-solid fa-video-slash"></i>';
+            btn.style.background = isCamOn ? '#374151' : '#ef4444';
+        }
+
+        function leaveMeeting() {
+            if (localStream) {
+                localStream.getTracks().forEach(t => t.stop());
+            }
+            document.getElementById('activeRoom').style.display = 'none';
+            document.getElementById('setupRoom').style.display = 'flex';
+            document.getElementById('meetingId').value = '';
+            currentRoom = null;
+        }
+
+        function inviteUsers() {
+            const id = document.getElementById('displayMeetingId').innerText;
+            alert('Meeting ID copied to clipboard: ' + id + '. Share this with your team via Chat to invite them!');
+            navigator.clipboard.writeText(id);
+        }
+    </script>
+</body>
+</html>
