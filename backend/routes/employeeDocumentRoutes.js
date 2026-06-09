@@ -41,9 +41,9 @@ function isHRorAdmin(user) {
 
 router.post('/upload', protect, upload.array('files', 20), async (req, res) => {
   try {
-    // Access control: only HR or Admin can upload
-    if (!isHRorAdmin(req.user)) {
-      return res.status(403).json({ error: 'Only HR or IT Admin can upload documents' });
+    // Access control: HR/Admin can upload for anyone, Employee only for self
+    if (!isHRorAdmin(req.user) && String(req.body.employeeId) !== String(req.user.employeeId)) {
+      return res.status(403).json({ error: 'You can only upload documents to your own folder' });
     }
     // Required fields validation
     const { employeeId, employeeName, department, designation, docTitle, docType } = req.body;
@@ -84,9 +84,15 @@ router.post('/upload', protect, upload.array('files', 20), async (req, res) => {
 
 router.get('/folders', protect, async (req, res) => {
   try {
-    if (!isHRorAdmin(req.user)) return res.status(403).json({ error: 'Unauthorized' });
+    if (!isHRorAdmin(req.user) && String(req.query.employeeId) !== String(req.user.employeeId)) {
+      if (!req.query.employeeId) {
+        req.query.employeeId = req.user.employeeId; // Default to own folder for employees
+      } else {
+        return res.status(403).json({ error: 'Unauthorized to view these folders' });
+      }
+    }
 
-    const where = {};
+    const where = { isDeleted: false };
     if (req.query.employeeId) where.employeeId = req.query.employeeId;
 
     const rows = await EmployeeDocument.findAll({ where, order: [['createdAt', 'DESC']] });
@@ -106,9 +112,17 @@ router.get('/folders', protect, async (req, res) => {
       grouped[key].documents.push(d);
     }
 
-    // Merge all users as default directories
+    // Merge users as default directories (if HR/Admin, merge all users; if Employee, only merge self)
     const User = require('../models/User');
-    const users = await User.findAll({ attributes: ['employeeId', 'fullName', 'department', 'designation'] });
+    let users = [];
+    if (isHRorAdmin(req.user)) {
+      users = await User.findAll({ attributes: ['employeeId', 'fullName', 'department', 'designation'] });
+    } else {
+      users = await User.findAll({ 
+        where: { employeeId: req.user.employeeId }, 
+        attributes: ['employeeId', 'fullName', 'department', 'designation'] 
+      });
+    }
     for (const u of users) {
       const key = u.employeeId;
       if (!grouped[key]) {
@@ -131,7 +145,9 @@ router.get('/folders', protect, async (req, res) => {
 // ── Create Folder Endpoint ──
 router.post('/create-folder', protect, async (req, res) => {
   try {
-    if (!isHRorAdmin(req.user)) return res.status(403).json({ error: 'Unauthorized' });
+    if (!isHRorAdmin(req.user) && String(req.body.employeeId) !== String(req.user.employeeId)) {
+      return res.status(403).json({ error: 'Unauthorized to create folders here' });
+    }
 
     const { employeeId, folderName } = req.body;
     if (!employeeId || !folderName) return res.status(400).json({ error: 'employeeId and folderName required' });
@@ -169,9 +185,16 @@ router.post('/create-folder', protect, async (req, res) => {
 
 router.get('/', protect, async (req, res) => {
   try {
-    if (!isHRorAdmin(req.user)) return res.status(403).json({ error: 'Unauthorized' });
-    const where = {};
-    if (req.query.employeeId) where.employeeId = req.query.employeeId;
+    const isDeleted = req.query.deleted === 'true';
+    const where = { isDeleted: isDeleted };
+    
+    if (!isHRorAdmin(req.user)) {
+      // Regular employees can only see their own docs
+      where.employeeId = req.user.employeeId;
+    } else if (req.query.employeeId) {
+      where.employeeId = req.query.employeeId;
+    }
+
     const rows = await EmployeeDocument.findAll({ where, order: [['createdAt', 'DESC']] });
     res.json(rows);
   } catch (e) {
@@ -214,22 +237,16 @@ router.put('/:id', protect, async (req, res) => {
 
 router.delete('/:id', protect, async (req, res) => {
   try {
-    if (!isHRorAdmin(req.user)) return res.status(403).json({ error: 'Unauthorized' });
     const row = await EmployeeDocument.findByPk(req.params.id);
     if (!row) return res.status(404).json({ error: 'Document not found' });
 
-    if (row.fileUrl) {
-      const relPath = row.fileUrl.replace(/^\/+/, '');
-      const filePath = path.normalize(path.join(__dirname, '..', relPath));
-
-      const allowedBase = path.normalize(path.join(__dirname, '..', 'uploads'));
-      if (filePath.startsWith(allowedBase) && fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
+    if (!isHRorAdmin(req.user) && String(row.employeeId) !== String(req.user.employeeId)) {
+      return res.status(403).json({ error: 'Unauthorized to delete this document' });
     }
 
-    await row.destroy();
-    res.json({ message: 'Deleted' });
+    // Soft Delete (move to History Center)
+    await row.update({ isDeleted: true });
+    res.json({ message: 'Deleted (moved to History)' });
   } catch (e) {
     res.status(500).json({ error: 'Failed to delete document' });
   }

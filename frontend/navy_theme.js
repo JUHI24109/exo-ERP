@@ -6,16 +6,17 @@ const files = fs.readdirSync(dir).filter(f => f.endsWith('.html') && f !== 'inde
 
 // Define our navy theme colors
 const theme = {
-    '--bg': '#f0f2f5',
-    '--surface': '#ffffff',
-    '--card-bg': '#ffffff',
-    '--primary': '#0a192f',      // Deep navy blue
-    '--primary-light': '#e2e8f0', // light grey-blue
-    '--accent': '#1d4ed8',       // Bright navy blue for buttons
-    '--text': '#1e293b',         // Slate 800 for main text
-    '--text-main': '#1e293b',
-    '--text-light': '#64748b',   // Slate 500
-    '--text-muted': '#64748b'
+    '--bg': '#ffffff',
+    '--surface': '#f3f4f6',
+    '--card-bg': '#f3f4f6',
+    '--primary': '#011638',      // Extremely dark navy blue
+    '--primary-dark': '#000c20', // Almost black navy blue
+    '--primary-light': '#e2e8f0',
+    '--accent': '#2563eb',       // Blue accent
+    '--text': '#111827',
+    '--text-main': '#111827',
+    '--text-light': '#6b7280',
+    '--text-muted': '#6b7280'
 };
 
 files.forEach(file => {
@@ -34,16 +35,16 @@ files.forEach(file => {
 
     // 3. Update the Sidebar Background
     // Sidebars typically use either #ffffff, #111827, #f8f9fa
-    // We want #0a192f (Navy) and white text
-    content = content.replace(/#sidebar\s*\{([^}]*?)background:\s*(#[0-9a-fA-F]{3,6}|rgba?[^;]+)([^}]*?)\}/gi, (match, p1, p2, p3) => {
-        let inside = p1 + 'background: #0a192f' + p3;
+    // We want var(--primary) and white text
+    content = content.replace(/#(sidebar|sidebarContainer)\s*\{([^}]*?)background:\s*(var\(--primary\)|#[0-9a-fA-F]{3,6}|rgba?[^;]+)([^}]*?)\}/gi, (match, p1, p2, p3, p4) => {
+        let inside = p2 + 'background: var(--primary)' + p4;
         // Make sure text is white
         if (inside.includes('color:')) {
             inside = inside.replace(/color:\s*(#[0-9a-fA-F]{3,6}|rgba?[^;]+)/i, 'color: #ffffff');
         } else {
             inside += ' color: #ffffff;';
         }
-        return `#sidebar {${inside}}`;
+        return `#${p1} {${inside}}`;
     });
 
     // 4. Update `.sb-header` or `.logo` borders if any

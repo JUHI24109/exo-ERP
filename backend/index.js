@@ -144,13 +144,17 @@ app.get('/api/stats', protect, async (req, res) => {
         let totalTickets = 0;
         let completedTickets = 0;
         let raisedTickets = 0;
-        let pendingTickets = 0;
+        let pendingTickets = 0; // Working
+        let openTickets = 0; // Just Raised
+        let overdueTickets = 0;
+        let deletedTickets = 0;
         const meetingsToday = 0; // Not implemented yet
         
         let deptMap = {};
         let teamPerformance = [];
         let ticketsByPriority = { High: 0, Medium: 0, Low: 0 };
-        let ticketsByStatus = { Working: 0, Completed: 0, Raised: 0 };
+        let ticketsByStatus = { Working: 0, Completed: 0, Raised: 0, Assigned: 0 };
+        let myRaisedTicketsPerf = { Raised: 0, Working: 0, Completed: 0, Pending: 0, Rejected: 0 };
 
         if (isExecutive) {
             // Company-wide stats
@@ -165,14 +169,27 @@ app.get('/api/stats', protect, async (req, res) => {
 
             totalTickets = await Ticket.count({ where: { isDeleted: false } });
             completedTickets = await Ticket.count({ where: { status: 'Completed', isDeleted: false } });
-            raisedTickets = await Ticket.count({ where: { status: 'Raised', isDeleted: false } });
+            openTickets = await Ticket.count({ where: { status: { [Op.in]: ['Raised', 'Assigned'] }, isDeleted: false } });
             pendingTickets = await Ticket.count({ where: { status: 'Working', isDeleted: false } });
+            deletedTickets = await Ticket.count({ where: { isDeleted: true } });
+            // For overdue, tickets don't have a dueDate yet, but we'll mock or leave 0
             
             // Group tickets for charts
-            const allTicks = await Ticket.findAll({ where: { isDeleted: false }, attributes: ['priority', 'status'] });
+            const allTicks = await Ticket.findAll({ where: { isDeleted: false }, attributes: ['priority', 'status', 'creatorId'] });
             allTicks.forEach(t => {
                 if (ticketsByPriority[t.priority] !== undefined) ticketsByPriority[t.priority]++;
                 if (ticketsByStatus[t.status] !== undefined) ticketsByStatus[t.status]++;
+                else ticketsByStatus[t.status] = 1;
+                
+                // My Raised Tickets performance
+                if (t.creatorId === req.user.id) {
+                    if (t.status === 'Raised') myRaisedTicketsPerf.Raised++;
+                    else if (t.status === 'Working') myRaisedTicketsPerf.Working++;
+                    else if (t.status === 'Completed') myRaisedTicketsPerf.Completed++;
+                    else if (t.status === 'Assigned') myRaisedTicketsPerf.Pending++;
+                    else if (t.status === 'Rejected') myRaisedTicketsPerf.Rejected++;
+                    else myRaisedTicketsPerf.Pending++;
+                }
             });
 
             const users = await User.findAll({ attributes: ['employeeId', 'fullName', 'role', 'department'] });
@@ -204,10 +221,10 @@ app.get('/api/stats', protect, async (req, res) => {
                 };
             });
         } else {
-            // Employee specific stats
-            totalEmployees = 1; // self
-            tasksDone = await Task.count({ where: { assignedTo: req.user.employeeId, status: 'Completed' } });
-            totalTasks = await Task.count({ where: { assignedTo: req.user.employeeId } });
+            // Personal stats
+            totalEmployees = 0; 
+            tasksDone = await Task.count({ where: { assignedTo: req.user.id, status: 'Completed' } });
+            totalTasks = await Task.count({ where: { assignedTo: req.user.id } });
             
             const today = new Date().toISOString().split('T')[0];
             const myAtt = await Attendance.findOne({ where: { userId: req.user.id, date: today } });
@@ -232,11 +249,21 @@ app.get('/api/stats', protect, async (req, res) => {
             totalTickets = myTickets.length;
             myTickets.forEach(t => {
                 if (t.status === 'Completed') completedTickets++;
-                else if (t.status === 'Raised') raisedTickets++;
+                else if (t.status === 'Raised' || t.status === 'Assigned') openTickets++;
                 else if (t.status === 'Working') pendingTickets++;
 
                 if (ticketsByPriority[t.priority] !== undefined) ticketsByPriority[t.priority]++;
                 if (ticketsByStatus[t.status] !== undefined) ticketsByStatus[t.status]++;
+                else ticketsByStatus[t.status] = 1;
+
+                    if (t.creatorId === req.user.id) {
+                        if (t.status === 'Raised') myRaisedTicketsPerf.Raised++;
+                        else if (t.status === 'Working') myRaisedTicketsPerf.Working++;
+                        else if (t.status === 'Completed') myRaisedTicketsPerf.Completed++;
+                        else if (t.status === 'Assigned' || t.status === 'Pending') myRaisedTicketsPerf.Pending++;
+                        else if (t.status === 'Rejected') myRaisedTicketsPerf.Rejected++;
+                        else myRaisedTicketsPerf.Pending++;
+                    }
             });
         }
 
@@ -250,11 +277,15 @@ app.get('/api/stats', protect, async (req, res) => {
                 productivity,
                 totalTickets,
                 completedTickets,
-                raisedTickets,
+                openTickets,
+                raisedTickets: openTickets,
                 pendingTickets,
+                overdueTickets,
+                deletedTickets,
                 meetingsToday,
                 ticketsByPriority,
-                ticketsByStatus
+                ticketsByStatus,
+                myRaisedTicketsPerf
             },
             departments: Object.entries(deptMap).map(([name, value]) => ({ name, value })),
             teamPerformance: teamPerformance

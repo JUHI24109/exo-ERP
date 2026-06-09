@@ -68,7 +68,7 @@
 </head>
 <body>
 <aside id="sidebar">
-<div class="logo-icon"><img src="logo.png" style="width:44px;height:44px;border-radius:6px;object-fit:contain;"></div>
+<img src="logo.jpeg" class="sidebar-logo" style="width:60px;height:60px;border-radius:8px;object-fit:contain;"/>
     <nav>
         <a href="dashboard-employee.html" class="nav-item active"><i class="fa-solid fa-house"></i> Dashboard</a>
         <a href="chat.html" class="nav-item"><i class="fa-solid fa-message"></i> Messages</a>
@@ -402,7 +402,9 @@ window.showSection = function(name) {
 
 </script>
 <script src="/js/nav-sync.js"></script>
-<script src="/js/notifications.js">
+<script src="/js/notifications.js"></script>
+<script src="/js/logo-fix.js"></script>
+<script>
 // ── DASHBOARD TODO WIDGET ──
 async function dashLoadMyTodos() {
     const list = document.getElementById('dashMyTodoList');

@@ -15,7 +15,10 @@ const EmployeeDocument = sequelize.define('EmployeeDocument', {
   fileUrl: { type: DataTypes.STRING, allowNull: false },
 
   uploadedBy: { type: DataTypes.INTEGER, allowNull: false },
-  updatedBy: { type: DataTypes.INTEGER, allowNull: false }
+  updatedBy: { type: DataTypes.INTEGER, allowNull: false },
+  
+  isDeleted: { type: DataTypes.BOOLEAN, defaultValue: false },
+  folder: { type: DataTypes.STRING, defaultValue: 'root' }
 }, {
   timestamps: true
 });

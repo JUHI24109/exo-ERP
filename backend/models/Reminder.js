@@ -32,6 +32,14 @@ const Reminder = sequelize.define('Reminder', {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
+  targetRoles: {
+    type: DataTypes.JSON, // e.g., ["CEO","Chairman"]
+    allowNull: true,
+  },
+  isDeleted: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
 });
 
 module.exports = Reminder;
