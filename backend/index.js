@@ -27,6 +27,7 @@ const UndertakingAsset = require('./models/UndertakingAsset');
 const TodoItem = require('./models/TodoItem');
 const EmployeeDocument = require('./models/EmployeeDocument');
 const Reminder = require('./models/Reminder');
+const Holiday = require('./models/Holiday');
 
 // Associations
 Ticket.belongsTo(User, { as: 'Creator', foreignKey: 'creatorId' });
@@ -130,6 +131,7 @@ app.use('/api/todos', require('./routes/todoRoutes'));
 app.use('/api/reminders', require('./routes/reminderRoutes'));
 app.use('/api/employee-documents', require('./routes/employeeDocumentRoutes'));
 app.use('/api/backup', require('./routes/backupRoutes'));
+app.use('/api/holidays', require('./routes/holidayRoutes'));
 
 // ── BI Analytics for Executive Dashboard ──
 app.get('/api/stats', protect, async (req, res) => {
