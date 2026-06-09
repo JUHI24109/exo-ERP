@@ -14,6 +14,7 @@ const { protect } = require('../middleware/authMiddleware');
 const { sendWhatsApp } = require('../utils/notification');
 
 const router = express.Router();
+const analyticsController = require('../controllers/analyticsController');
 
 // Multer Config
 const storage = multer.diskStorage({
@@ -100,22 +101,28 @@ router.post('/', protect, upload.single('file'), async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ── Get My Tickets (Management sees all, Employees see their own) ──
+// ── Get My Tickets (Strict Privacy unless ?all=true is passed) ──
+router.get('/analytics/personal', protect, analyticsController.getPersonalAnalytics);
 router.get('/my-tickets', protect, async (req, res) => {
     try {
         let whereClause = {};
-        // CEO, Chairman, IT Admin can see ALL tickets including deleted
         const isExecutive = ['IT Admin', 'Chairman', 'CEO'].includes(req.user.role);
         const showDeleted = req.query.deleted === 'true';
+        const showAll = req.query.all === 'true';
+        const { startDate, endDate } = req.query;
 
-        // Security check - only executives can view deleted
+        // Security check
         if (showDeleted && !isExecutive) {
             return res.status(403).json({ error: 'Permission denied. Only IT Admin, Chairman, CEO can view deleted tickets.' });
         }
+        if (showAll && !isExecutive) {
+            return res.status(403).json({ error: 'Permission denied. Only executives can view all tickets.' });
+        }
         
-        if (isExecutive) {
-            // Executives see ALL tickets (both active and deleted if requested)
-            whereClause = showDeleted ? {} : { isDeleted: false };
+        // Base Privacy Check
+        if (isExecutive && (showAll || showDeleted)) {
+            whereClause = showDeleted ? { isDeleted: true } : { isDeleted: false };
+            // If they want literally ALL including deleted, we could pass an extra flag, but normally 'all' means all active.
         } else {
             whereClause = {
                 isDeleted: false,
@@ -127,12 +134,29 @@ router.get('/my-tickets', protect, async (req, res) => {
             };
         }
 
+        // Date Filtering with proper UTC handling
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            start.setUTCHours(0, 0, 0, 0);
+            const end = new Date(endDate);
+            end.setUTCHours(23, 59, 59, 999);
+            whereClause.createdAt = { [Op.between]: [start, end] };
+        } else if (startDate) {
+            const start = new Date(startDate);
+            start.setUTCHours(0, 0, 0, 0);
+            whereClause.createdAt = { [Op.gte]: start };
+        } else if (endDate) {
+            const end = new Date(endDate);
+            end.setUTCHours(23, 59, 59, 999);
+            whereClause.createdAt = { [Op.lte]: end };
+        }
+
         const tickets = await Ticket.findAll({
             where: whereClause,
             include: [
                 { model: User, as: 'Creator', attributes: ['fullName', 'role'] },
                 { model: User, as: 'Assignee', attributes: ['fullName', 'role'] },
-                { model: TicketShare, include: [{ model: User, attributes: ['fullName'] }] }
+                { model: TicketShare, required: false, include: [{ model: User, attributes: ['fullName'] }] }
             ],
             order: [
                 ['createdAt', 'DESC']

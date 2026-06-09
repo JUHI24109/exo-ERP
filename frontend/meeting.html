@@ -61,7 +61,7 @@
 <body>
 
     <aside id="sidebar">
-        <div class="logo"><i class="fa-solid fa-gem"></i> EXO GLOBAL</div>
+        <img src="logo.jpeg" class="sidebar-logo" style="width:60px;height:60px;border-radius:8px;object-fit:contain;"/>
         <div class="nav-list">
             <a href="dashboard.html" class="nav-item" id="navDash"><i class="fa-solid fa-house"></i> Dashboard</a>
             <a href="chat.html" class="nav-item"><i class="fa-solid fa-message"></i> Messages</a>
@@ -83,6 +83,10 @@
                 <h2>Join Meeting</h2>
                 <input type="text" id="meetingId" placeholder="Enter Meeting ID or leave blank to start new">
                 <button class="setup-btn" onclick="joinMeeting()"><i class="fa-solid fa-right-to-bracket"></i> Join Now</button>
+            <div class="external-links" style="margin-top:10px; display:flex; gap:15px; justify-content:center;">
+                <a href="https://meet.google.com" target="_blank" class="setup-btn" style="background:#4285F4; display:flex; align-items:center; justify-content:center;"><i class="fab fa-google"></i> Google Meet</a>
+                <a href="https://teams.microsoft.com" target="_blank" class="setup-btn" style="background:#6264A7; display:flex; align-items:center; justify-content:center;"><i class="fab fa-microsoft"></i> Microsoft Teams</a>
+            </div>
             </div>
         </div>
 

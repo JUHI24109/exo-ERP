@@ -14,7 +14,7 @@ function isHRorAdmin(user) {
 // Create a new reminder
 router.post('/', protect, async (req, res) => {
   try {
-    const { message, reminderDateTime, isPublic } = req.body;
+    const { message, reminderDateTime, isPublic, targetRoles } = req.body;
     if (!message || !reminderDateTime) {
       return res.status(400).json({ error: 'Message and reminder date/time are required' });
     }
@@ -24,6 +24,7 @@ router.post('/', protect, async (req, res) => {
       message,
       reminderDateTime: new Date(reminderDateTime), // Ensure it's a Date object
       isPublic: !!isPublic,
+      targetRoles: targetRoles ? JSON.parse(targetRoles) : null,
     });
 
     // Broadcast new reminder for real-time sync
@@ -32,9 +33,13 @@ router.post('/', protect, async (req, res) => {
       const fullReminder = await Reminder.findByPk(reminder.id, {
         include: [{ model: User, as: 'User', attributes: ['fullName', 'role'] }]
       });
-      // Broadcast to everyone if public, otherwise just to the user
+      // Broadcast to everyone if public or targeted roles include the user, otherwise just to the owner
       if (isPublic) {
         io.emit('reminder_update', { action: 'created', reminder: fullReminder });
+      } else if (targetRoles && targetRoles.length) {
+        // Emit to each role's room (we'll assume role‑based rooms are joined elsewhere)
+        const parsedRoles = typeof targetRoles === 'string' ? JSON.parse(targetRoles) : targetRoles;
+        parsedRoles.forEach(r => io.emit(`role_${r}`, { action: 'created', reminder: fullReminder }));
       } else {
         io.to(String(req.user.id)).emit('reminder_update', { action: 'created', reminder: fullReminder });
       }
@@ -56,6 +61,7 @@ router.get('/my', protect, async (req, res) => {
     const where = {
       userId: req.user.id,
       isDismissed: false,
+      isDeleted: false,
       reminderDateTime: {
         [Op.gte]: today, // Greater than or equal to today
       },
@@ -69,6 +75,26 @@ router.get('/my', protect, async (req, res) => {
   } catch (e) {
     console.error('Failed to fetch my reminders:', e);
     res.status(500).json({ error: 'Failed to fetch my reminders' });
+  }
+});
+
+// Get personal history reminders
+router.get('/history', protect, async (req, res) => {
+  try {
+    const where = {
+      userId: req.user.id,
+      isDeleted: false,
+      isDismissed: true
+    };
+
+    const reminders = await Reminder.findAll({
+      where,
+      order: [['updatedAt', 'DESC']],
+    });
+    res.json(reminders);
+  } catch (e) {
+    console.error('Failed to fetch reminder history:', e);
+    res.status(500).json({ error: 'Failed to fetch reminder history' });
   }
 });
 
@@ -86,27 +112,25 @@ router.get('/all', protect, async (req, res) => {
     let where;
     
     if (isHR) {
-      // HR can see: public reminders + CEO reminders + Chairman reminders + own reminders
-      const [ceo] = await User.findAll({ where: { role: 'CEO' } });
-      const [chairman] = await User.findAll({ where: { role: 'Chairman' } });
-      
+      // HR can see: public reminders + reminders targeting any of their role + own reminders
+      const role = req.user.role;
       where = {
         isDismissed: false,
         [Op.or]: [
           { isPublic: true },
           { userId: req.user.id },
-          ...(ceo ? [{ userId: ceo.id }] : []),
-          ...(chairman ? [{ userId: chairman.id }] : [])
+          { targetRoles: { [Op.contains]: [role] } }
         ]
       };
     } else if (isCEO) {
-      // CEO/Chairman see only their own reminders + public ones
-      // NOT other employees' private reminders
+      // CEO/Chairman see: public + their own + reminders targeting their role
+      const role = req.user.role;
       where = {
         isDismissed: false,
         [Op.or]: [
           { isPublic: true },
-          { userId: req.user.id }
+          { userId: req.user.id },
+          { targetRoles: { [Op.contains]: [role] } }
         ]
       };
     } else {
@@ -164,7 +188,7 @@ router.delete('/:id', protect, async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized to delete this reminder' });
     }
 
-    await reminder.destroy();
+    await reminder.update({ isDeleted: true });
 
     // Broadcast deletion
     const io = req.app.get('io');

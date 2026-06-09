@@ -23,21 +23,20 @@
     function syncNav() {
         const dashboard = getDashboard();
         
-        // Find any link that looks like a dashboard link and point it to the correct one
+        // Adjust hrefs for dashboard links to point to the correct page
         document.querySelectorAll('a').forEach(a => {
             const href = a.getAttribute('href');
             if (!href) return;
-
-            // Fix Dashboard links
             if (href === 'dashboard.html' || href === 'dashboard-employee.html') {
                 a.setAttribute('href', dashboard);
             }
+        });
 
-            // Fix Tasks/Tickets ambiguity
-            if (a.innerText.trim() === 'Tasks' && href === 'tickets.html') {
-                // If it's the employee dashboard, we might want it to point to a tasks page specifically, 
-                // but usually they share the tickets system.
-            }
+        // Set active link based on current pathname
+        const currentPage = window.location.pathname.split('/').pop();
+        document.querySelectorAll('.nav-link').forEach(link => {
+            const href = link.getAttribute('href');
+            link.classList.toggle('active', href === currentPage);
         });
 
         // Ensure Logout works everywhere
@@ -48,7 +47,15 @@
             window.location.href = 'index.html';
         };
 
-        // Fix back buttons in Profile
+            // Insert History Center link into navigation if missing
+        const navContainer = document.getElementById('navLinks') || document.querySelector('nav');
+        if (navContainer && !navContainer.querySelector('a[href="history.html"]')) {
+            const link = document.createElement('a');
+            link.href = 'history.html';
+            link.className = 'nav-link';
+            link.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> History Center';
+            navContainer.appendChild(link);
+        }
         const backBtn = document.querySelector('.header a[href="dashboard.html"]');
         if (backBtn) backBtn.setAttribute('href', dashboard);
     }

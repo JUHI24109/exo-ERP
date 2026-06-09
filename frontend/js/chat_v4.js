@@ -26,6 +26,9 @@ if (!token || !user.id) {
 }
 
 const socket = io();
+if (Notification.permission === 'default') {
+    Notification.requestPermission();
+}
 let activeChatId = null;
 let allUsers = [];
 let myGroups = [];
@@ -108,11 +111,21 @@ function setupListeners() {
 
 async function loadAllData() {
     try {
-        await Promise.all([loadUsers(), loadGroups()]);
+        await Promise.all([loadUsers(), loadGroups(), loadUnreadCounts()]);
         renderUserList();
     } catch (err) {
         console.error('Data load error:', err);
     }
+}
+
+async function loadUnreadCounts() {
+    try {
+        const res = await fetch('/api/chat/unread', { 
+            headers: { Authorization: `Bearer ${token}` } 
+        });
+        const counts = await res.json();
+        unreadCounts = counts || {};
+    } catch (err) { console.error('Unread load failed', err); }
 }
 
 async function loadUsers() {
@@ -189,6 +202,12 @@ function renderItem(u, list, isGroup) {
     const unread = unreadCounts[id] || 0;
     const timeStr = last.time ? new Date(last.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
 
+    if (unread > 0 && activeChatId !== id) {
+        item.classList.add('unread');
+    } else {
+        item.classList.remove('unread');
+    }
+
     item.innerHTML = `
         <div class="u-av" style="background:${avBg};">
             ${avText}
@@ -222,6 +241,10 @@ function selectUser(id, name, status) {
     const hAv = document.getElementById('headerAv');
     hAv.innerText = name.charAt(0);
     hAv.style.background = String(id).includes('group') || String(id).length > 20 ? '#00a884' : '#6366f1';
+
+    // Mark messages as read
+    const uId = user.employeeId || user.id;
+    socket.emit('mark_read', { otherId: id, userId: uId });
 
     renderUserList();
     loadHistory(id);
@@ -465,12 +488,26 @@ socket.on('receive_message', msg => {
 });
 
 function showNewMessageNotification(msg, isGroup) {
+    const title = isGroup ? `New in group: ${msg.Sender?.fullName || 'Someone'}` : `Message from ${msg.Sender?.fullName || 'Someone'}`;
+    const body = msg.content || 'Sent a file';
+    // Show toast if defined
     if (typeof showToast === 'function') {
-        const senderName = msg.Sender?.fullName || 'Someone';
         showToast({
-            title: isGroup ? `New in group: ${senderName}` : `Message from ${senderName}`,
-            message: msg.content || 'Sent a file'
+            title: title,
+            message: body
         });
+    }
+    // Show browser notification
+    if (Notification.permission === 'granted') {
+        const notification = new Notification(title, {
+            body: body,
+            icon: '/images/notification_icon.png'
+        });
+        // Focus window on click
+        notification.onclick = () => {
+            window.focus();
+            // Optionally navigate to chat
+        };
     }
 }
 

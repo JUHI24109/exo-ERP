@@ -62,6 +62,46 @@ router.get('/history/:u1/:u2', protect, async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'History failed' }); }
 });
 
+// ── Get Recent Messages ──
+router.get('/recent', protect, async (req, res) => {
+    try {
+        const messages = await Message.findAll({
+            where: {
+                [Op.or]: [
+                    { receiverId: String(req.user.id) },
+                    { receiverId: req.user.employeeId }
+                ]
+            },
+            order: [['createdAt', 'DESC']],
+            include: [{ model: User, as: 'Sender', attributes: ['fullName'] }],
+            limit: 3
+        });
+        res.json(messages);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch recent messages' });
+    }
+});
+
+// ── Get Unread Counts ──
+router.get('/unread', protect, async (req, res) => {
+    try {
+        const unreadMsgs = await Message.findAll({
+            where: {
+                receiverId: [String(req.user.id), req.user.employeeId],
+                isRead: false
+            }
+        });
+        const counts = {};
+        unreadMsgs.forEach(m => {
+            counts[m.senderId] = (counts[m.senderId] || 0) + 1;
+        });
+        res.json(counts);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch unread' });
+    }
+});
+
 // ── Upload File ──
 router.post('/upload', protect, upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file' });

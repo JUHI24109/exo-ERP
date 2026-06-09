@@ -37,7 +37,8 @@ router.post('/', protect, async (req, res) => {
 router.get('/', protect, async (req, res) => {
   try {
     const month = req.query.month;
-    const where = { userId: req.user.id, isDeleted: false };
+    // Active todos only
+    const where = { userId: req.user.id, isDeleted: false, isDone: false };
 
     if (month) {
       where[Op.or] = [
@@ -55,6 +56,19 @@ router.get('/', protect, async (req, res) => {
     res.json(rows);
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch todos' });
+  }
+});
+
+router.get('/history', protect, async (req, res) => {
+  try {
+    // Completed todos
+    const rows = await TodoItem.findAll({ 
+      where: { userId: req.user.id, isDeleted: false, isDone: true }, 
+      order: [['updatedAt', 'DESC']] 
+    });
+    res.json(rows);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch todo history' });
   }
 });
 
