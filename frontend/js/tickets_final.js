@@ -42,11 +42,19 @@ async function loadUsers() {
         const transferAssignee = document.getElementById('transferAssignee');
         const shareUsers = document.getElementById('shareUsers');
         
+        const filterAssignee = document.getElementById('filterAssignee');
+        const filterCreator = document.getElementById('filterCreator');
+
         tAssignee.innerHTML = '<option value="">Self (Keep it me)</option>';
         transferAssignee.innerHTML = '';
         if(shareUsers) shareUsers.innerHTML = '';
+        if(filterAssignee) filterAssignee.innerHTML = '<option value="">All Assignees</option>';
+        if(filterCreator) filterCreator.innerHTML = '<option value="">All Creators</option>';
         
         users.forEach(u => {
+            if(filterAssignee) filterAssignee.innerHTML += `<option value="${u.fullName.toLowerCase()}">${u.fullName}</option>`;
+            if(filterCreator) filterCreator.innerHTML += `<option value="${u.fullName.toLowerCase()}">${u.fullName}</option>`;
+            
             if(String(u.id) === String(user.id)) return; // Exclude self
             const opt = `<option value="${u.id}">${u.fullName} (${u.role})</option>`;
             tAssignee.innerHTML += opt;
@@ -493,8 +501,8 @@ window.openShareModal = openShareModal;
 window.closeShareModal = closeShareModal;
 
 function downloadReport() {
-    const startDate = document.getElementById('filterStartDate').value;
-    const endDate = document.getElementById('filterEndDate').value;
+    const startDate = document.getElementById('filterFromDate').value;
+    const endDate = document.getElementById('filterToDate').value;
     window.location.href = `/api/tickets/export?startDate=${startDate}&endDate=${endDate}&token=${token}`;
 }
 
@@ -697,23 +705,14 @@ window.confirmDeleteTicket = async function() {
 };
 
 function setupDateFilter() {
-  const startEl = document.getElementById('filterStartDate');
-  const endEl = document.getElementById('filterEndDate');
-  const applyBtn = document.getElementById('applyDateBtn');
-  if (!startEl || !endEl || !applyBtn) return;
-
-  const toggleApply = () => {
-    applyBtn.disabled = !(startEl.value && endEl.value);
-  };
-
-  startEl.addEventListener('change', toggleApply);
-  endEl.addEventListener('change', toggleApply);
-  toggleApply();
+  const startEl = document.getElementById('filterFromDate');
+  const endEl = document.getElementById('filterToDate');
+  // Date filtering logic triggers on change in HTML now.
 }
 
 function applyDateFilter() {
-    const startEl = document.getElementById('filterStartDate');
-    const endEl = document.getElementById('filterEndDate');
+    const startEl = document.getElementById('filterFromDate');
+    const endEl = document.getElementById('filterToDate');
     const badge = document.getElementById('activeDateBadge');
     if (badge) {
         badge.textContent = `${startEl.value} to ${endEl.value}`;

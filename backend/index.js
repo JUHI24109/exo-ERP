@@ -129,6 +129,7 @@ app.use('/api/assets', require('./routes/assetRoutes'));
 app.use('/api/todos', require('./routes/todoRoutes'));
 app.use('/api/reminders', require('./routes/reminderRoutes'));
 app.use('/api/employee-documents', require('./routes/employeeDocumentRoutes'));
+app.use('/api/backup', require('./routes/backupRoutes'));
 
 // ── BI Analytics for Executive Dashboard ──
 app.get('/api/stats', protect, async (req, res) => {

@@ -19,7 +19,7 @@
 
   const sidebarHTML = `
     <div class="logo">
-      <img src="logo.jpeg" class="sidebar-logo" style="width:80px;height:80px;border-radius:10px;object-fit:contain;"/>
+      <img src="exologo.png" class="sidebar-logo" style="width:80px;height:80px;border-radius:10px;object-fit:contain;"/>
     </div>
     <nav>
       ${links.map(l => {

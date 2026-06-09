@@ -45,23 +45,33 @@ async function initNotifications() {
     // Bind existing bell icons
     const setupBells = () => {
         document.querySelectorAll('.fa-bell').forEach(bell => {
-            const parent = bell.parentElement;
-            if (parent.dataset.notifBound) return;
-            parent.dataset.notifBound = 'true';
-            parent.style.cursor = 'pointer';
-            parent.style.position = 'relative';
-            parent.addEventListener('click', (e) => {
+            if (bell.dataset.notifBound) return;
+            bell.dataset.notifBound = 'true';
+            
+            // Skip toasts
+            if (bell.closest('.toast-notif')) return;
+
+            // Wrap the bell in a relative container so badge positions correctly
+            const wrapper = document.createElement('span');
+            wrapper.style.position = 'relative';
+            wrapper.style.cursor = 'pointer';
+            wrapper.style.display = 'inline-block';
+            
+            bell.parentNode.insertBefore(wrapper, bell);
+            wrapper.appendChild(bell);
+            
+            wrapper.addEventListener('click', (e) => {
                 e.stopPropagation();
                 toggleNotifPanel();
             });
             
-            // Add dynamic badge if missing
-            if (!parent.querySelector('.badge') && !parent.querySelector('.ui-badge')) {
-                const b = document.createElement('span');
-                b.className = 'ui-badge';
-                b.style.display = 'none';
-                parent.appendChild(b);
-            }
+            // Add dynamic badge
+            const b = document.createElement('span');
+            b.className = 'ui-badge';
+            b.style.display = 'none';
+            b.style.top = '-8px';
+            b.style.right = '-8px';
+            wrapper.appendChild(b);
         });
     };
     setupBells();
@@ -129,7 +139,7 @@ async function fetchNotifications() {
         }
         
         // Update all badges on screen
-        document.querySelectorAll('.badge, .ui-badge').forEach(b => {
+        document.querySelectorAll('.ui-badge, .notif-badge').forEach(b => {
             if (unread > 0) {
                 b.innerText = unread;
                 b.style.display = 'flex';

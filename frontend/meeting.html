@@ -6,6 +6,7 @@
     <title>Live Meeting | EXO GLOBAL</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/styles.css">
     <style>
         :root {
             --primary: #0a192f;
@@ -21,7 +22,7 @@
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
 
         #sidebar { width: 220px; background: #0a192f; border-right: none; display: flex; flex-direction: column; flex-shrink: 0; color: #ffffff; }
-        .logo { height: 60px; padding: 0 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        /* Removed conflicting .logo style – global stylesheet now controls logo appearance */
         .nav-list { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
         .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 4px; color: rgba(255,255,255,0.7); text-decoration: none; font-weight: 500; transition: 0.2s; }
         .nav-item:hover { background: #1f2937; color: #ffffff; }
@@ -56,21 +57,43 @@
             .nav-item { white-space: nowrap; }
             .video-grid { height: 40vh; }
         }
-    </style>
+    
+/* ── SIDEBAR ── */
+#sidebar{width:250px;background:#1e293b;border-right:2px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+@media (min-width: 769px) { #sidebar { height: 100vh; position: sticky; top: 0; } }
+.logo{height:100px;padding:0 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;justify-content:center;}
+.logo-icon{width:52px;height:52px;border-radius:8px;background:transparent;display:flex;align-items:center;justify-content:center;overflow:hidden;border:none}
+.logo-icon img{width:100%;height:100%;object-fit:contain;border-radius:8px}
+.logo-text{font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;color:#fff}
+#sidebar nav{flex:1;padding:18px 12px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;}
+.nav-link{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:4px;color:#ffffff;text-decoration:none;font-weight:600;transition:.2s;border:1px solid transparent;font-size:13px}
+.nav-link:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.05)}
+.nav-link.active{background:rgba(14,165,233,0.15);border:1px solid var(--primary);box-shadow:inset 3px 0 0 var(--primary)}
+.nav-link .count-badge{background:var(--primary);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px;margin-left:auto}
+
+</style>
 </head>
 <body>
 
-    <aside id="sidebar">
-        <img src="logo.jpeg" class="sidebar-logo" style="width:60px;height:60px;border-radius:8px;object-fit:contain;"/>
-        <div class="nav-list">
-            <a href="dashboard.html" class="nav-item" id="navDash"><i class="fa-solid fa-house"></i> Dashboard</a>
-            <a href="chat.html" class="nav-item"><i class="fa-solid fa-message"></i> Messages</a>
-            <a href="tickets.html" class="nav-item"><i class="fa-solid fa-ticket"></i> Tickets</a>
-            <a href="meeting.html" class="nav-item active"><i class="fa-solid fa-video"></i> Meetings</a>
-            <div style="flex:1;"></div>
-            <a href="#" onclick="logout(event)" class="nav-item" style="color:#ef4444;"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
-        </div>
-    </aside>
+    
+<aside id="sidebar">
+    <div class="logo"><img src="exologo.png?v=2" class="sidebar-logo" style="width:80px;height:80px;border-radius:8px;object-fit:contain;"/></div>
+    <nav>
+        <a href="dashboard.html" class="nav-link"><i class="fa-solid fa-house"></i> Dashboard</a>
+        <a href="employees.html" class="nav-link"><i class="fa-solid fa-users"></i> Employees</a>
+        <a href="attendance.html" class="nav-link"><i class="fa-solid fa-user-check"></i> Attendance</a>
+        <a href="tickets.html" class="nav-link"><i class="fa-solid fa-ticket"></i> Tickets</a>
+        <a href="chat.html" class="nav-link"><i class="fa-solid fa-message"></i> Chat</a>
+        <a href="meeting.html" class="nav-link"><i class="fa-solid fa-video"></i> Live Meeting</a>
+        <a href="documents.html" class="nav-link"><i class="fa-solid fa-folder-open"></i> Documents</a>
+        <a href="history.html" class="nav-link"><i class="fa-solid fa-clock-rotate-left"></i> History Center</a>
+        <a href="undertakings.html" class="nav-link" id="navUndertakings" style="display:none;"><i class="fa-solid fa-handshake"></i> Undertakings</a>
+        <div style="flex:1"></div>
+        <a href="profile.html" class="nav-link"><i class="fa-solid fa-id-badge"></i> My Profile</a>
+        <a href="javascript:void(0)" onclick="logout()" class="nav-link" style="color:var(--danger)"><i class="fa-solid fa-power-off"></i> Logout</a>
+    </nav>
+</aside>
+
 
     <main>
         <header>
@@ -202,5 +225,6 @@
             navigator.clipboard.writeText(id);
         }
     </script>
-</body>
+    <script src="/js/nav-sync.js"></script>
+    </body>
 </html>

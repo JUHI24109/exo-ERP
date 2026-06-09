@@ -139,21 +139,43 @@
             .btn { width: 100% !important; justify-content: center !important; }
         }
 
-    </style>
+    
+/* ── SIDEBAR ── */
+#sidebar{width:250px;background:#1e293b;border-right:2px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+@media (min-width: 769px) { #sidebar { height: 100vh; position: sticky; top: 0; } }
+.logo{height:100px;padding:0 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;justify-content:center;}
+.logo-icon{width:52px;height:52px;border-radius:8px;background:transparent;display:flex;align-items:center;justify-content:center;overflow:hidden;border:none}
+.logo-icon img{width:100%;height:100%;object-fit:contain;border-radius:8px}
+.logo-text{font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;color:#fff}
+#sidebar nav{flex:1;padding:18px 12px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;}
+.nav-link{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:4px;color:#ffffff;text-decoration:none;font-weight:600;transition:.2s;border:1px solid transparent;font-size:13px}
+.nav-link:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.05)}
+.nav-link.active{background:rgba(14,165,233,0.15);border:1px solid var(--primary);box-shadow:inset 3px 0 0 var(--primary)}
+.nav-link .count-badge{background:var(--primary);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px;margin-left:auto}
+
+</style>
 </head>
 <body>
 
-    <aside id="sidebar">
-        <div class="logo"><i class="fa-solid fa-gem"></i> EXO GLOBAL</div>
-        <div class="nav-list">
-            <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i> Dashboard</a>
-            <a href="chat.html" class="nav-item"><i class="fa-solid fa-message"></i> Messages</a>
-            <a href="tickets.html" class="nav-item active"><i class="fa-solid fa-ticket"></i> Tickets</a>
-            <a href="profile.html" class="nav-item"><i class="fa-solid fa-id-badge"></i> My Profile</a>
-            <div style="flex:1;"></div>
-            <a href="#" onclick="logout(event)" class="nav-item" style="color:var(--danger);"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
-        </div>
-    </aside>
+    
+<aside id="sidebar">
+    <div class="logo"><img src="exologo.png?v=2" class="sidebar-logo" style="width:80px;height:80px;border-radius:8px;object-fit:contain;"/></div>
+    <nav>
+        <a href="dashboard.html" class="nav-link"><i class="fa-solid fa-house"></i> Dashboard</a>
+        <a href="employees.html" class="nav-link"><i class="fa-solid fa-users"></i> Employees</a>
+        <a href="attendance.html" class="nav-link"><i class="fa-solid fa-user-check"></i> Attendance</a>
+        <a href="tickets.html" class="nav-link"><i class="fa-solid fa-ticket"></i> Tickets</a>
+        <a href="chat.html" class="nav-link"><i class="fa-solid fa-message"></i> Chat</a>
+        <a href="meeting.html" class="nav-link"><i class="fa-solid fa-video"></i> Live Meeting</a>
+        <a href="documents.html" class="nav-link"><i class="fa-solid fa-folder-open"></i> Documents</a>
+        <a href="history.html" class="nav-link"><i class="fa-solid fa-clock-rotate-left"></i> History Center</a>
+        <a href="undertakings.html" class="nav-link" id="navUndertakings" style="display:none;"><i class="fa-solid fa-handshake"></i> Undertakings</a>
+        <div style="flex:1"></div>
+        <a href="profile.html" class="nav-link"><i class="fa-solid fa-id-badge"></i> My Profile</a>
+        <a href="javascript:void(0)" onclick="logout()" class="nav-link" style="color:var(--danger)"><i class="fa-solid fa-power-off"></i> Logout</a>
+    </nav>
+</aside>
+
 
     <main>
         <header>
@@ -169,24 +191,66 @@
 
         <div class="content">
             <div class="ticket-list-sect">
-                <div style="display:flex; gap:10px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:10px;">
-                    <button class="tab-btn active" id="tabActive" onclick="switchMainTab('active')">Active Tasks</button>
-                    <button class="tab-btn" id="tabPast" onclick="switchMainTab('past')">Past Tickets</button>
-                    <button class="tab-btn" id="tabAll" onclick="switchMainTab('all')" style="display:none;">All Tickets</button>
-                    <button class="tab-btn" id="tabDeleted" onclick="switchMainTab('deleted')" style="display:none; color:var(--danger);">Deleted Tickets</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+                    <div style="display:flex; gap:10px;">
+                        <button class="tab-btn active" id="tabActive" onclick="switchMainTab('active')">Active Tasks</button>
+                        <button class="tab-btn" id="tabPast" onclick="switchMainTab('past')">Past Tickets</button>
+                        <button class="tab-btn" id="tabAll" onclick="switchMainTab('all')" style="display:none;">All Tickets</button>
+                        <button class="tab-btn" id="tabDeleted" onclick="switchMainTab('deleted')" style="display:none; color:var(--danger);">Deleted Tickets</button>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input type="text" id="searchQuery" placeholder="Search by ID, keyword..." style="width:220px; margin:0; padding:8px 12px; font-size:13px; border:1px solid var(--border); border-radius:6px; background:#f8fafc;" oninput="renderTickets()">
+                        <button class="btn btn-outline" onclick="downloadReport()" style="padding:8px 14px; font-size:13px; background:white; border-radius:6px; border:1px solid var(--border);"><i class="fa-solid fa-download"></i> Export CSV</button>
+                    </div>
                 </div>
 
-                <div class="action-bar" style="gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
-                    <div style="font-weight:700; font-size:14px; color:var(--text-muted);"><span id="tabLabel">Active</span> Tickets (<span id="ticketCount">0</span>)</div>
-                    <div style="display:flex; gap:10px; flex:1; justify-content:flex-end; align-items:center;">
-                        <input type="text" id="searchQuery" placeholder="Search by ID, keyword, name..." style="max-width:300px; margin:0; padding:8px 12px; font-size:13px;" oninput="renderTickets()">
-                        <select id="statusFilter" style="width:auto; margin:0; padding:8px 12px; font-size:13px;" onchange="renderTickets()">
-                            <option value="all">All Status</option>
-                            <option value="Raised">Raised</option>
-                            <option value="Working">Working</option>
-                            <option value="Assigned">Assigned</option>
-                            <option value="Completed">Completed</option>
-                        </select>
+                <div class="filter-container" style="background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px 20px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+                        <div style="font-weight:700; font-size:13px; color:var(--text-main); display:flex; align-items:center; gap:6px;"><i class="fa-solid fa-filter" style="color:var(--accent);"></i> Advanced Filters</div>
+                        <div style="font-weight:600; font-size:12px; color:var(--text-muted);"><span id="tabLabel">Active</span> Tickets (<span id="ticketCount">0</span>)</div>
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <label style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">From Date</label>
+                            <input type="date" id="filterFromDate" style="padding:8px; font-size:12px; border:1px solid #cbd5e1; border-radius:6px; background:#f8fafc; outline:none;" onchange="applyDateFilter()">
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <label style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">To Date</label>
+                            <input type="date" id="filterToDate" style="padding:8px; font-size:12px; border:1px solid #cbd5e1; border-radius:6px; background:#f8fafc; outline:none;" onchange="applyDateFilter()">
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <label style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Status</label>
+                            <select id="statusFilter" style="padding:8px; font-size:12px; border:1px solid #cbd5e1; border-radius:6px; background:#f8fafc; outline:none;" onchange="renderTickets()">
+                                <option value="all">All Status</option>
+                                <option value="Raised">Raised</option>
+                                <option value="Working">Working</option>
+                                <option value="Assigned">Assigned</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <label style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Priority</label>
+                            <select id="filterPriority" style="padding:8px; font-size:12px; border:1px solid #cbd5e1; border-radius:6px; background:#f8fafc; outline:none;" onchange="renderTickets()">
+                                <option value="all">All Priorities</option>
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <label style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Creator</label>
+                            <select id="filterCreator" style="padding:8px; font-size:12px; border:1px solid #cbd5e1; border-radius:6px; background:#f8fafc; outline:none;" onchange="renderTickets()">
+                                <option value="">All Creators</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <label style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Assignee</label>
+                            <select id="filterAssignee" style="padding:8px; font-size:12px; border:1px solid #cbd5e1; border-radius:6px; background:#f8fafc; outline:none;" onchange="renderTickets()">
+                                <option value="">All Assignees</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
