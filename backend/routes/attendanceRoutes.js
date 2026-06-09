@@ -212,4 +212,14 @@ router.get('/admin/range', protect, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message || 'Failed' }); }
 });
 
+// Get list of all employees (for filter dropdown)
+router.get('/admin/employees', protect, async (req, res) => {
+  try {
+    const employees = await User.findAll({ attributes: ['id', 'fullName', 'employeeId'], order: [['fullName', 'ASC']] });
+    res.json(employees);
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed' });
+  }
+});
+
 module.exports = router;

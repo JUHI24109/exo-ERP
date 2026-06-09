@@ -27,6 +27,11 @@ async function sendBackupEmail(toEmail, employeeId, zipPath) {
         ]
     };
 
+    if (!process.env.SMTP_USER || process.env.SMTP_USER === 'your-email@outlook.com' || process.env.SMTP_USER === 'your-email@gmail.com') {
+        console.log(`[Mock Email] Simulated sending backup zip to ${toEmail}`);
+        return { messageId: 'simulated-id', accepted: [toEmail] };
+    }
+
     return await transporter.sendMail(mailOptions);
 }
 

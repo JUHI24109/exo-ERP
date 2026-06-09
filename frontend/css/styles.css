@@ -44,13 +44,20 @@
   box-shadow: var(--shadow-md);
 }
 
-#sidebar .logo {
-  height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+.logo {
+    height: 100px;
+    padding: 0 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+/* Ensure logo image uses its original colours */
+.logo img,
+.sidebar-logo {
+    filter: none !important;
 }
 
 #sidebar nav {
@@ -196,3 +203,7 @@ html, body {
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
 }
+
+/* Logo Alignment */
+.logo { justify-content: flex-start !important; padding-left: 20px !important; }
+
