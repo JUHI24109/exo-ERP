@@ -43,6 +43,7 @@
         .c-tasks{grid-column:span 8}
         .c-attendance{grid-column:span 6}
         .c-leaves{grid-column:span 6}
+        .c-tickets{grid-column:span 12}
         .list-item{display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--border);transition:background .2s;border-radius:6px}
         .list-item:hover{background:#f8fafc;padding-left:8px;margin:0 -8px}
         .list-item:last-child{border-bottom:none}
@@ -85,17 +86,18 @@
 <aside id="sidebar">
     <div class="logo"><img src="exologo.png?v=2" class="sidebar-logo" style="width:80px;height:80px;border-radius:8px;object-fit:contain;"/></div>
     <nav>
-        <a href="dashboard.html" class="nav-link"><i class="fa-solid fa-house"></i> Dashboard</a>
+        <a href="dashboard.html" class="nav-item" id="nav-dashboard"><i class="fa-solid fa-house"></i> Dashboard</a>
         <a href="employees.html" class="nav-link"><i class="fa-solid fa-users"></i> Employees</a>
-        <a href="attendance.html" class="nav-link"><i class="fa-solid fa-user-check"></i> Attendance</a>
-        <a href="tickets.html" class="nav-link"><i class="fa-solid fa-ticket"></i> Tickets</a>
-        <a href="chat.html" class="nav-link"><i class="fa-solid fa-message"></i> Chat</a>
-        <a href="meeting.html" class="nav-link"><i class="fa-solid fa-video"></i> Live Meeting</a>
-        <a href="documents.html" class="nav-link"><i class="fa-solid fa-folder-open"></i> Documents</a>
-        <a href="history.html" class="nav-link"><i class="fa-solid fa-clock-rotate-left"></i> History Center</a>
+        <a href="javascript:void(0)" onclick="showSection('attendance')" class="nav-item" id="nav-attendance"><i class="fa-solid fa-user-check"></i> Attendance</a>
+        <a href="javascript:void(0)" onclick="showSection('leaves')" class="nav-item" id="nav-leaves"><i class="fa-solid fa-calendar-minus"></i> My Leaves</a>
+        <a href="tickets.html" class="nav-item" id="nav-tickets"><i class="fa-solid fa-ticket"></i> Tickets</a>
+        <a href="chat.html" class="nav-item" id="nav-chat"><i class="fa-solid fa-message"></i> Chat</a>
+        <a href="meeting.html" class="nav-item" id="nav-meeting"><i class="fa-solid fa-video"></i> Live Meeting</a>
+        <a href="documents.html" class="nav-item" id="nav-documents"><i class="fa-solid fa-folder-open"></i> Documents</a>
+        <a href="history.html" class="nav-item" id="nav-history"><i class="fa-solid fa-clock-rotate-left"></i> History Center</a>
         <a href="undertakings.html" class="nav-link" id="navUndertakings" style="display:none;"><i class="fa-solid fa-handshake"></i> Undertakings</a>
         <div style="flex:1"></div>
-        <a href="profile.html" class="nav-link"><i class="fa-solid fa-id-badge"></i> My Profile</a>
+        <a href="profile.html" class="nav-item" id="nav-profile"><i class="fa-solid fa-id-badge"></i> My Profile</a>
         <a href="javascript:void(0)" onclick="logout()" class="nav-link" style="color:var(--danger)"><i class="fa-solid fa-power-off"></i> Logout</a>
     </nav>
 </aside>
@@ -111,7 +113,7 @@
             </div>
         </div>
     </header>
-    <div class="dashboard">
+    <div class="dashboard" id="mainSection">
         <div style="font-size:11px;color:var(--text-light)" id="dateStr">Loading...</div>
         <div class="kpi-row">
             <div class="kpi-card"><div class="kpi-header"><span class="kpi-title">Assigned Tasks</span><i class="fa-solid fa-layer-group" style="color:#3b82f6"></i></div><span class="kpi-val" id="kpiTot">0</span></div>
@@ -146,10 +148,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card c-tasks">
-                <div class="card-header">My Tasks</div>
-                <div class="card-body" id="taskList" style="padding-top:0"><div style="color:var(--text-light);text-align:center;padding:16px">Loading...</div></div>
-            </div>
+            
             <div class="card c-attendance">
                 <div class="card-header">Recent Attendance</div>
                 <div class="card-body" id="attList" style="padding-top:0"><div style="color:var(--text-light);text-align:center;padding:16px">Loading...</div></div>
@@ -158,8 +157,65 @@
                 <div class="card-header">My Leave Requests</div>
                 <div class="card-body" id="leaveList" style="padding-top:0"><div style="color:var(--text-light);text-align:center;padding:16px">Loading...</div></div>
             </div>
+            
         </div>
     </div>
+
+<!-- ═══ MY LEAVES SECTION ═══ -->
+<section id="leavesSection" style="display:none;flex-direction:column;flex:1;padding:20px;gap:14px;overflow-y:auto;background:var(--bg);">
+    <div class="card" style="flex:1;">
+        <div class="card-header" style="font-size:18px; color:var(--primary);"><i class="fa-solid fa-calendar-minus"></i> My Leave Requests</div>
+        <div class="card-body" style="padding:20px;">
+            <div style="display:flex; gap:10px; margin-bottom:20px; justify-content:flex-end;">
+                <button class="btn" style="background:var(--accent); color:white;" onclick="showLeaveModal()"><i class="fa-solid fa-plus"></i> Apply Leave</button>
+            </div>
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="background:var(--primary-light); color:var(--primary); font-size:12px; font-weight:700;">
+                        <th style="padding:10px;text-align:left">Type & Reason</th>
+                        <th style="padding:10px;text-align:left">Dates</th>
+                        <th style="padding:10px;text-align:center">HR Status</th>
+                        <th style="padding:10px;text-align:center">Final Status</th>
+                    </tr>
+                </thead>
+                <tbody id="myLeavesTableBody">
+                    <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-light);">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ ATTENDANCE SECTION ═══ -->
+<section id="attendanceSection" style="display:none;flex-direction:column;flex:1;padding:20px;gap:14px;overflow-y:auto;background:var(--bg);">
+    <div class="card" style="flex:1;">
+        <div class="card-header" style="font-size:18px; color:var(--primary);"><i class="fa-solid fa-calendar-check"></i> My Attendance Record</div>
+        <div class="card-body" style="padding:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <div style="font-weight:700; font-size:16px; color:var(--text-main);" id="calMonthDisplay">Month</div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn" style="background:var(--surface); border:1px solid var(--border); color:var(--text-main);" onclick="calPrevMonth()"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="btn" style="background:var(--surface); border:1px solid var(--border); color:var(--text-main);" onclick="calNextMonth()"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </div>
+            
+            <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; text-align:center; font-weight:700; color:var(--text-light); font-size:12px; margin-bottom:10px;">
+                <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+            </div>
+            <div id="calendarGrid" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; min-height:400px;">
+                <!-- Filled by JS -->
+            </div>
+            
+            <!-- Summary stats below calendar -->
+            <div style="margin-top:20px; display:flex; gap:20px; font-size:13px; font-weight:600; color:var(--text-main); background:var(--surface); padding:15px; border-radius:8px; border:1px solid var(--border);">
+                <div style="display:flex; align-items:center; gap:8px;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#dcfce7;border:1px solid #16a34a;"></span> Present: <span id="calStatPresent">0</span></div>
+                <div style="display:flex; align-items:center; gap:8px;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#fee2e2;border:1px solid #dc2626;"></span> Absent: <span id="calStatAbsent">0</span></div>
+                <div style="display:flex; align-items:center; gap:8px;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#fef3c7;border:1px solid #d97706;"></span> Leave: <span id="calStatLeave">0</span></div>
+                <div style="display:flex; align-items:center; gap:8px;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#f3f4f6;border:1px solid #9ca3af;"></span> Weekend/Holiday: <span id="calStatHoliday">0</span></div>
+            </div>
+        </div>
+    </div>
+</section>
 
 <!-- ═══ MY TO-DO SECTION ═══ -->
 <section id="todoSection" style="display:none;flex-direction:column;flex:1;padding:20px;gap:14px;overflow-y:auto;background:var(--bg);">
@@ -272,6 +328,23 @@ async function init() {
 
     // My Leaves
     loadMyLeaves();
+
+    // Tickets
+    try {
+        const res = await fetch('/api/tickets', { headers: { Authorization: `Bearer ${token}` } });
+        const allTickets = await res.json();
+        const myTickets = allTickets.filter(t => t.currentAssigneeId === user.id || t.creatorId === user.id);
+        const tl = document.getElementById('dashTicketList');
+        tl.innerHTML = '';
+        if (!myTickets.length) {
+            tl.innerHTML = '<div style="color:var(--text-light);text-align:center;padding:16px">No active tickets.</div>';
+        } else {
+            myTickets.slice(0, 5).forEach(t => {
+                const badgeColor = t.status === 'Completed' ? 'var(--success)' : t.status === 'Rejected' ? 'var(--danger)' : t.status === 'Working' ? 'var(--accent)' : 'var(--warning)';
+                tl.innerHTML += '<div class="list-item"><i class="fa-solid fa-ticket" style="color:var(--text-light)"></i><div class="item-text"><div class="item-title">' + t.title + '</div><div class="item-sub">Priority: ' + (t.priority||'Medium') + '</div></div><div style="background:' + badgeColor + '22;color:' + badgeColor + ';padding:4px 10px;border-radius:16px;font-size:11px;font-weight:700;">' + t.status + '</div></div>';
+            });
+        }
+    } catch(e) { console.error('Tickets error:', e); }
 }
 
 async function loadMyLeaves() {
@@ -305,7 +378,7 @@ async function submitLeave() {
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
             body: JSON.stringify({ startDate: start, endDate: end, reason, type })
         });
-        if (res.ok) { alert('Leave request submitted!'); hideLeaveModal(); document.getElementById('leaveReason').value = ''; loadMyLeaves(); }
+        if (res.ok) { alert('Leave request submitted!'); hideLeaveModal(); document.getElementById('leaveReason').value = ''; loadMyLeaves(); if(typeof empLoadMyLeaves === 'function') empLoadMyLeaves(); }
         else { const d = await res.json(); alert(d.error || 'Failed'); }
     } catch(e) { alert('Connection error'); }
     finally { btn.disabled = false; btn.innerText = 'Submit Request'; }
@@ -651,5 +724,6 @@ async function loadDashReminders(){
     } catch(e) { console.error('Error loading reminders:', e); }
 }
 </script>
+<script src="/js/emp_attendance_calendar.js"></script>
 </body>
 </html>

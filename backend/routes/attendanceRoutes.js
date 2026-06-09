@@ -4,6 +4,9 @@ const Attendance = require('../models/Attendance');
 const User = require('../models/User');
 const { protect } = require('../middleware/authMiddleware');
 
+// Load Portuguese public holidays (YYYY-MM-DD strings)
+const publicHolidays = require('../data/public_holidays_pt.json');
+
 const router = express.Router();
 
 router.get('/today', protect, async (req, res) => {
@@ -17,15 +20,19 @@ router.get('/today', protect, async (req, res) => {
 router.post('/checkin', protect, async (req, res) => {
   try {
     const today = new Date().toISOString().split('T')[0];
+    // Disallow check‑in on public holidays
+    if (publicHolidays.includes(today)) {
+      return res.status(400).json({ error: 'Today is a public holiday; cannot check in.' });
+    }
     const existing = await Attendance.findOne({ where: { userId: req.user.id, date: today } });
     if (existing) {
       return res.status(400).json({ error: 'Already clocked in for today' });
     }
     const record = await Attendance.create({ userId: req.user.id, date: today, loginTime: new Date(), status: 'Present' });
     res.json(record);
-  } catch (err) { 
+  } catch (err) {
     console.error('Check-in error:', err);
-    res.status(500).json({ error: 'Failed to clock in' }); 
+    res.status(500).json({ error: 'Failed to clock in' });
   }
 });
 
@@ -66,6 +73,52 @@ router.get('/mine', protect, async (req, res) => {
     });
     res.json(records);
   } catch (err) { res.status(500).json({ error: 'Failed' }); }
+});
+
+// HR/Admin day-wise attendance view
+router.get('/summary', protect, async (req, res) => {
+  try {
+    const { month } = req.query; // format: YYYY-MM
+    const start = month ? `${month}-01` : new Date().toISOString().slice(0, 8) + '01';
+    const endDate = new Date(start);
+    endDate.setMonth(endDate.getMonth() + 1);
+    const end = endDate.toISOString().slice(0, 10);
+    // Fetch attendance records for the period
+    const records = await Attendance.findAll({
+      where: { userId: req.user.id, date: { [Op.gte]: start, [Op.lt]: end } }
+    });
+    // Compute summary counts
+    const summary = { totalDays: 0, present: 0, halfDay: 0, absent: 0, leave: 0, holiday: 0 };
+    // Build a set of all dates in the month
+    const dateSet = new Set();
+    for (let d = new Date(start); d < new Date(end); d.setDate(d.getDate() + 1)) {
+      const iso = d.toISOString().slice(0, 10);
+      dateSet.add(iso);
+    }
+    // Mark holidays in the set
+    const holidaysInMonth = publicHolidays.filter(h => dateSet.has(h));
+    summary.holiday = holidaysInMonth.length;
+    // Count attendance statuses
+    for (const rec of records) {
+      summary.totalDays += 1;
+      if (rec.status === 'Present') summary.present += 1;
+      else if (rec.status === 'Half Day') summary.halfDay += 1;
+      else if (rec.status === 'Absent') summary.absent += 1;
+      else if (rec.status === 'Leave') summary.leave += 1;
+    }
+    // Account for days with no record (treated as absent unless holiday)
+    for (const d of dateSet) {
+      if (holidaysInMonth.includes(d)) continue;
+      if (!records.find(r => r.date === d)) {
+        summary.absent += 1;
+        summary.totalDays += 1;
+      }
+    }
+    res.json(summary);
+  } catch (err) {
+    console.error('Attendance summary error:', err);
+    res.status(500).json({ error: 'Failed to fetch summary' });
+  }
 });
 
 // HR/Admin day-wise attendance view
