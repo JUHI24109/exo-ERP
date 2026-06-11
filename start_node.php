@@ -16,8 +16,8 @@ EOT;
 $script = str_replace("\r", "", $script);
 file_put_contents('startup.sh', $script);
 
-// Run the script in the background completely detached
-pclose(popen("nohup bash ./startup.sh > /dev/null 2>&1 &", "r"));
+// Use exec as we know it's allowed. Proper redirection prevents blocking.
+exec("bash ./startup.sh > /dev/null 2>&1 &");
 
 echo "<span style='color:green; font-size:18px;'><b>✅ Command sent to server!</b></span>\n\n";
 echo "The server is now installing packages and starting Node.js in the background.\n";
