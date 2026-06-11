@@ -1,36 +1,33 @@
 <?php
-set_time_limit(300); // Allow up to 5 minutes for npm install
-echo "<h2>EXO-ERP Node.js Server Starter</h2>";
+echo "<h2>EXO-ERP Node.js Server Starter (Background Mode)</h2>";
 echo "<pre>";
 
-echo "<b>1. Running npm install (this may take 1-2 minutes)...</b>\n";
-exec("npm install --no-audit --no-fund --legacy-peer-deps 2>&1", $out_npm);
-echo implode("\n", $out_npm) . "\n\n";
+// We create a bash script to run everything, so PHP doesn't have to wait.
+$script = <<<EOT
+#!/bin/bash
+echo "Starting installation at \$(date)" > backend_log.txt
+npm install --no-audit --no-fund --legacy-peer-deps >> backend_log.txt 2>&1
+echo "Installation finished at \$(date). Starting Node.js..." >> backend_log.txt
+pkill node
+nohup node backend/index.js >> backend_log.txt 2>&1 &
+echo "Node.js started at \$(date)" >> backend_log.txt
+EOT;
 
-echo "<b>2. Killing any existing Node.js processes...</b>\n";
-exec("pkill node 2>&1", $out_kill);
-sleep(2);
+file_put_contents('startup.sh', $script);
+chmod('startup.sh', 0755);
 
-echo "<b>3. Starting Node.js Backend on Port 5000...</b>\n";
-// nohup ensures it keeps running after the PHP script finishes
-exec("nohup node backend/index.js > backend_log.txt 2>&1 &", $out_node);
-echo implode("\n", $out_node) . "\n";
-sleep(3); // wait a few seconds to let it start
+// Run the script in the background completely detached
+exec("nohup ./startup.sh > /dev/null 2>&1 &");
 
-echo "<b>4. Checking if Node is running:</b>\n";
-$out_ps = [];
-exec("ps aux | grep 'node backend/index.js' | grep -v grep 2>&1", $out_ps);
-if (count($out_ps) > 0) {
-    echo "<span style='color:green'>SUCCESS! Node.js is running.</span>\n";
-    echo implode("\n", $out_ps) . "\n";
-} else {
-    echo "<span style='color:red'>FAILED! Node.js is not running. Check backend_log.txt</span>\n";
-}
+echo "<span style='color:green; font-size:18px;'><b>✅ Command sent to server!</b></span>\n\n";
+echo "The server is now installing packages and starting Node.js in the background.\n";
+echo "<b>You do NOT need to wait on this page!</b>\n\n";
+echo "<b>Next Steps:</b>\n";
+echo "1. Wait exactly <b>2 minutes</b>.\n";
+echo "2. Go to your login page and try logging in.\n";
+echo "3. If it still says Connection Error, wait 1 more minute and try again.\n";
 
-echo "<b>5. Backend Logs (first 20 lines):</b>\n";
-$out_logs = [];
-exec("head -n 20 backend_log.txt 2>&1", $out_logs);
-echo implode("\n", $out_logs) . "\n";
+echo "\n<a href='frontend/index.html' style='padding:10px; background:#3b82f6; color:white; text-decoration:none; border-radius:5px;'>Go to Login Page</a>";
 
 echo "</pre>";
 ?>
