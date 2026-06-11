@@ -3,5 +3,9 @@ node_modules/
 uploads/
 .kilocode/
 
+# Backups & large files
 backend/backups/
+legacy/backend/backups/
+*.sqlite
+*.zip
 
