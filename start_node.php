@@ -15,10 +15,9 @@ EOT;
 
 $script = str_replace("\r", "", $script);
 file_put_contents('startup.sh', $script);
-chmod('startup.sh', 0755);
 
 // Run the script in the background completely detached
-exec("nohup ./startup.sh > /dev/null 2>&1 &");
+pclose(popen("nohup bash ./startup.sh > /dev/null 2>&1 &", "r"));
 
 echo "<span style='color:green; font-size:18px;'><b>✅ Command sent to server!</b></span>\n\n";
 echo "The server is now installing packages and starting Node.js in the background.\n";
