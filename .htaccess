@@ -1,8 +1,9 @@
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
-# Proxy API requests to Node.js backend running on port 5000
-RewriteRule ^api/(.*)$ http://127.0.0.1:5000/api/$1 [P,L]
+# Route all /api/ requests to our PHP proxy
+RewriteRule ^api/(.*)$ api.php [L,QSA]
+</IfModule>
 
 # Proxy WebSocket requests to Node.js backend
 RewriteRule ^socket\.io/(.*)$ http://127.0.0.1:5000/socket.io/$1 [P,L]
