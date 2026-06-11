@@ -13,6 +13,7 @@ nohup node backend/index.js >> backend_log.txt 2>&1 &
 echo "Node.js started at \$(date)" >> backend_log.txt
 EOT;
 
+$script = str_replace("\r", "", $script);
 file_put_contents('startup.sh', $script);
 chmod('startup.sh', 0755);
 
