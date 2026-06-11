@@ -1,9 +1,10 @@
 <?php
+set_time_limit(300); // Allow up to 5 minutes for npm install
 echo "<h2>EXO-ERP Node.js Server Starter</h2>";
 echo "<pre>";
 
-echo "<b>1. Running npm install...</b>\n";
-exec("npm install 2>&1", $out_npm);
+echo "<b>1. Running npm install (this may take 1-2 minutes)...</b>\n";
+exec("npm install --no-audit --no-fund --legacy-peer-deps 2>&1", $out_npm);
 echo implode("\n", $out_npm) . "\n\n";
 
 echo "<b>2. Killing any existing Node.js processes...</b>\n";
