@@ -3,7 +3,6 @@ RewriteEngine On
 
 # Route all /api/ requests to our PHP proxy
 RewriteRule ^api/(.*)$ api.php [L,QSA]
-</IfModule>
 
 # Proxy WebSocket requests to Node.js backend
 RewriteRule ^socket\.io/(.*)$ http://127.0.0.1:5000/socket.io/$1 [P,L]
