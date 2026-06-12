@@ -2,22 +2,23 @@
 echo "<h2>EXO-ERP Node.js Server Starter (Background Mode)</h2>";
 echo "<pre>";
 
-// We create a bash script to run everything, so PHP doesn't have to wait.
+$dir = __DIR__;
 $script = <<<EOT
 #!/bin/bash
-echo "Starting installation at \$(date)" > backend_log.txt
-npm install --no-audit --no-fund --legacy-peer-deps >> backend_log.txt 2>&1
-echo "Installation finished at \$(date). Starting Node.js..." >> backend_log.txt
+cd "{$dir}"
+echo "Starting installation at \$(date)" > "{$dir}/backend_log.txt"
+npm install --no-audit --no-fund --legacy-peer-deps >> "{$dir}/backend_log.txt" 2>&1
+echo "Installation finished at \$(date). Starting Node.js..." >> "{$dir}/backend_log.txt"
 pkill node
-nohup node backend/index.js >> backend_log.txt 2>&1 &
-echo "Node.js started at \$(date)" >> backend_log.txt
+nohup node "{$dir}/backend/index.js" >> "{$dir}/backend_log.txt" 2>&1 &
+echo "Node.js started at \$(date)" >> "{$dir}/backend_log.txt"
 EOT;
 
 $script = str_replace("\r", "", $script);
-file_put_contents('startup.sh', $script);
+file_put_contents($dir . '/startup.sh', $script);
 
 // Use exec as we know it's allowed. Proper redirection prevents blocking.
-exec("bash ./startup.sh > /dev/null 2>&1 &");
+exec("bash " . escapeshellarg($dir . '/startup.sh') . " > /dev/null 2>&1 &");
 
 echo "<span style='color:green; font-size:18px;'><b>✅ Command sent to server!</b></span>\n\n";
 echo "The server is now installing packages and starting Node.js in the background.\n";
