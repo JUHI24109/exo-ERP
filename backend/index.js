@@ -78,16 +78,25 @@ app.set('io', io);
 // Database Sync & Seed
 (async () => {
     try {
-        if (sequelize.getDialect() === 'sqlite') {
+        const dialect = sequelize.getDialect();
+        if (dialect === 'sqlite') {
             await sequelize.query('PRAGMA foreign_keys = OFF;');
             await sequelize.sync({ alter: true });
             await sequelize.query('PRAGMA foreign_keys = ON;');
+        } else if (dialect === 'mysql') {
+            // MySQL: disable FK checks, sync, re-enable
+            await sequelize.query('SET FOREIGN_KEY_CHECKS = 0;');
+            try {
+                await sequelize.query('DROP TABLE IF EXISTS `Messages`;');
+            } catch(e) { /* ignore if table doesn't exist */ }
+            await sequelize.sync({ alter: true });
+            await sequelize.query('SET FOREIGN_KEY_CHECKS = 1;');
         } else {
-            // Drop Messages table to fix type mismatch (senderId was integer, now string)
+            // PostgreSQL
             await sequelize.query('DROP TABLE IF EXISTS "Messages" CASCADE;');
             await sequelize.sync({ alter: true });
         }
-        console.log('📦 Database Cleaned & Synced (Secure Mode)');
+        console.log('📦 Database Cleaned & Synced (Secure Mode) — Dialect:', dialect);
 
     const seedUsers = [
         { id: 'EXO-001', name: 'Chairman', email: 'chairman@exo.com', role: 'Chairman', phone: '+910000000001' },
