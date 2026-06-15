@@ -27,10 +27,22 @@ if (process.env.DB_HOST && process.env.DB_DATABASE) {
     dialect: 'postgres',
     logging: false,
     dialectOptions: {
-      // If hosted remotely, uncomment the next block:
       // ssl: { require: true, rejectUnauthorized: false }
     }
   });
+} else if (process.env.DB_DIALECT === 'mysql') {
+  console.log('🔗 Connecting to MySQL database...');
+  sequelize = new Sequelize(
+    process.env.DB_DATABASE || 'zeytnndnay',
+    process.env.DB_USERNAME || 'zeytnndnay',
+    process.env.DB_PASSWORD,
+    {
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      dialect: 'mysql',
+      logging: false,
+    }
+  );
 } else {
   console.log('🔗 Falling back to SQLite database...');
   sequelize = new Sequelize({

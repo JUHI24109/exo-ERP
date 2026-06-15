@@ -1,20 +1,15 @@
 // backend/services/systemBackupService.js
 const fs = require('fs');
 const path = require('path');
-const { ZipArchive } = require('archiver');
+const archiver = require('archiver');
 
 /**
  * Creates a full system backup ZIP containing:
- *  - Full DB dump (generated via Sequelize raw query to SQLite)
+ *  - Full DB dump
  *  - Entire uploads folder
  * Returns the absolute path to the created ZIP file.
  */
 async function createSystemBackup() {
-  // 1. Export DB to SQL (for SQLite we can use .backup via raw query)
-  const dbPath = path.resolve(__dirname, '..', 'database.sqlite');
-  const dbStats = fs.statSync(dbPath);
-  const dumpContent = fs.readFileSync(dbPath);
-
   // 2. Prepare backup folder
   const backupDir = path.join(__dirname, '..', 'backups');
   if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
@@ -24,16 +19,13 @@ async function createSystemBackup() {
 
   return new Promise((resolve, reject) => {
     const output = fs.createWriteStream(zipPath);
-    const archive = new ZipArchive({ zlib: { level: 9 } });
+    const archive = archiver('zip', { zlib: { level: 9 } });
 
     output.on('close', () => resolve(zipPath));
     archive.on('warning', err => { if (err.code !== 'ENOENT') reject(err); });
     archive.on('error', err => reject(err));
 
     archive.pipe(output);
-
-    // Add DB file
-    archive.append(dumpContent, { name: 'database.sqlite' });
 
     // Add uploads folder
     const uploadsPath = path.join(__dirname, '..', 'uploads');

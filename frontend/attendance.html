@@ -27,15 +27,18 @@
         }
         body { margin:0; background:var(--bg); font-family:'Inter',sans-serif; display:flex; height:100vh; overflow:hidden; color:var(--text-main); font-size:13px; }
         
-        /* SIDEBAR */
-        #sidebar{width:250px;background:#fff;border-right:2px solid var(--border-soft);display:flex;flex-direction:column;flex-shrink:0}
-        .logo{height:72px;padding:0 22px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;gap:12px}
+        /* ── SIDEBAR ── */
+#sidebar{width:250px;background:#1e293b;border-right:2px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+@media (min-width: 769px) { #sidebar { height: 100vh; position: sticky; top: 0; } }
+.logo{height:100px;padding:0 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;justify-content:flex-start;}
 .logo-icon{width:52px;height:52px;border-radius:8px;background:transparent;display:flex;align-items:center;justify-content:center;overflow:hidden;border:none}
-        .logo-text{font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;color:var(--primary)}
-        nav{flex:1;padding:18px 12px;display:flex;flex-direction:column;gap:6px; overflow-y:auto;}
-        .nav-link{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;color:var(--primary-dark);text-decoration:none;font-weight:600;transition:.2s;border:1px solid transparent;font-size:13px}
-        .nav-link:hover{background:var(--pink-bg);border-color:var(--border-soft)}
-        .nav-link.active{background:var(--pink-bg);border:1px solid var(--border);box-shadow:inset 3px 0 0 var(--primary)}
+.logo-icon img{width:100%;height:100%;object-fit:contain;border-radius:8px}
+.logo-text{font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;color:#fff}
+#sidebar nav{flex:1;padding:18px 12px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;}
+.nav-link{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:4px;color:#ffffff;text-decoration:none;font-weight:600;transition:.2s;border:1px solid transparent;font-size:13px}
+.nav-link:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.05)}
+.nav-link.active{background:rgba(14,165,233,0.15);border:1px solid var(--primary);box-shadow:inset 3px 0 0 var(--primary)}
+.nav-link .count-badge{background:var(--primary);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px;margin-left:auto}
         
         /* MAIN */
         main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;background:#fefefe}
@@ -96,8 +99,6 @@
 
 <aside id="sidebar">
     <div class="logo"><img src="exologo.png" class="sidebar-logo" style="width:80px;height:80px;border-radius:8px;object-fit:contain;"/></div>
-        <div class="logo-text">EXO GLOBAL</div>
-    </div>
     <nav id="navLinks">
         <!-- Injected by JS based on role -->
     </nav>
