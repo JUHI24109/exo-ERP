@@ -4,10 +4,17 @@ const http       = require('http');
 const { Server } = require('socket.io');
 const cors       = require('cors');
 const path       = require('path');
-const bcrypt     = require('bcrypt');
+const bcrypt     = require('bcryptjs');
 const { Op }     = require('sequelize');
 const sequelize  = require('./config/db');
 const fs         = require('fs');
+
+process.on('uncaughtException', (err) => {
+    console.error('🔥 Uncaught Exception:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('🔥 Unhandled Rejection:', reason);
+});
 
 // Models
 const User       = require('./models/User');
