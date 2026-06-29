@@ -54,13 +54,16 @@ if (!function_exists('getallheaders')) {
 
 $headers = [];
 foreach (getallheaders() as $name => $value) {
-    if (strtolower($name) !== 'host') {
+    $lowerName = strtolower($name);
+    if ($lowerName !== 'host' && $lowerName !== 'content-length' && $lowerName !== 'content-type') {
         $headers[] = "$name: $value";
     }
 }
+
 if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') === false) {
     $headers[] = "Content-Type: " . $_SERVER['CONTENT_TYPE'];
 }
+
 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
 $response = curl_exec($ch);
