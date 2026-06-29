@@ -22,7 +22,10 @@ curl_setopt($ch, CURLOPT_HEADER, true);
 curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $_SERVER['REQUEST_METHOD']);
 
-if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') !== false) {
+$isMultipart = isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') !== false;
+$isPost = $_SERVER['REQUEST_METHOD'] === 'POST';
+
+if ($isMultipart && $isPost) {
     $postFields = array();
     foreach ($_POST as $key => $value) {
         $postFields[$key] = $value;
@@ -55,13 +58,24 @@ if (!function_exists('getallheaders')) {
 $headers = [];
 foreach (getallheaders() as $name => $value) {
     $lowerName = strtolower($name);
-    if ($lowerName !== 'host' && $lowerName !== 'content-length' && $lowerName !== 'content-type') {
-        $headers[] = "$name: $value";
+    // If we reconstructed the multipart form (POST only), we MUST drop original Length and Type headers.
+    // If it's PUT/PATCH, we are proxying raw bytes, so we keep ALL original headers!
+    if ($isMultipart && $isPost) {
+        if ($lowerName !== 'host' && $lowerName !== 'content-length' && $lowerName !== 'content-type') {
+            $headers[] = "$name: $value";
+        }
+    } else {
+        if ($lowerName !== 'host') {
+            $headers[] = "$name: $value";
+        }
     }
 }
 
-if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') === false) {
-    $headers[] = "Content-Type: " . $_SERVER['CONTENT_TYPE'];
+// Only manually inject Content-Type if we stripped it during reconstruction
+if ($isMultipart && $isPost === false && isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') === false) {
+    // We didn't strip it, so we don't inject it twice.
+} else if (!$isMultipart && isset($_SERVER['CONTENT_TYPE'])) {
+    // For normal JSON POSTs etc, we kept it in getallheaders(), so we don't need to inject it twice.
 }
 
 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
