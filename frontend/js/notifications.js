@@ -90,7 +90,7 @@ async function initNotifications() {
 
     // Connect Socket
     if (typeof io !== 'undefined') {
-        notifSocket = io({ transports: ['polling', 'websocket'] });
+        notifSocket = io({ path: '/api/socket.io', transports: ['polling'] });
         console.log('Global Notif Socket Initializing...');
         notifSocket.on('connect', () => console.log('✅ Notif Socket Connected:', notifSocket.id));
         notifSocket.on('connect_error', (err) => console.error('❌ Notif Socket Error:', err));
