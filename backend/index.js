@@ -4,17 +4,18 @@ const http       = require('http');
 const { Server } = require('socket.io');
 const cors       = require('cors');
 const path       = require('path');
-const bcrypt     = require('bcryptjs');
-const { Op }     = require('sequelize');
-const sequelize  = require('./config/db');
 const fs         = require('fs');
 
-process.on('uncaughtException', (err) => {
-    console.error('🔥 Uncaught Exception:', err);
-});
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('🔥 Unhandled Rejection:', reason);
-});
+// Auto-create necessary directories
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+const backupDir = path.join(__dirname, 'backups');
+if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
+
+const bcrypt     = require('bcrypt');
+const { Op }     = require('sequelize');
+const sequelize  = require('./config/db');
 
 // Models
 const User       = require('./models/User');

@@ -25,7 +25,7 @@ if (!token || !user.id) {
     window.location.href = '/';
 }
 
-const socket = io();
+const socket = io({ transports: ['polling', 'websocket'] });
 if (Notification.permission === 'default') {
     Notification.requestPermission();
 }

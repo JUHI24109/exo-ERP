@@ -17,6 +17,7 @@ if (process.env.DB_HOST && process.env.DB_DATABASE) {
       port: parseInt(process.env.DB_PORT || '3306', 10),
       dialect: dialect,
       logging: false,
+      quoteIdentifiers: true,
       pool: { max: 5, min: 0, acquire: 30000, idle: 10000 },
       dialectOptions: dialect === 'mysql' ? { connectTimeout: 10000 } : {}
     }
@@ -41,6 +42,7 @@ if (process.env.DB_HOST && process.env.DB_DATABASE) {
       port: process.env.DB_PORT || 3306,
       dialect: 'mysql',
       logging: false,
+      quoteIdentifiers: true
     }
   );
 } else {
