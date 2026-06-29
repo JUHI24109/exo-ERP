@@ -22,9 +22,22 @@ curl_setopt($ch, CURLOPT_HEADER, true);
 curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $_SERVER['REQUEST_METHOD']);
 
-$input = file_get_contents('php://input');
-if ($input) {
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $input);
+if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') !== false) {
+    $postFields = array();
+    foreach ($_POST as $key => $value) {
+        $postFields[$key] = $value;
+    }
+    foreach ($_FILES as $key => $file) {
+        if (!is_array($file['tmp_name']) && $file['tmp_name'] !== '') {
+            $postFields[$key] = new CURLFile($file['tmp_name'], $file['type'], $file['name']);
+        }
+    }
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+} else {
+    $input = file_get_contents('php://input');
+    if ($input) {
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $input);
+    }
 }
 
 if (!function_exists('getallheaders')) {
@@ -45,7 +58,7 @@ foreach (getallheaders() as $name => $value) {
         $headers[] = "$name: $value";
     }
 }
-if (isset($_SERVER['CONTENT_TYPE'])) {
+if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') === false) {
     $headers[] = "Content-Type: " . $_SERVER['CONTENT_TYPE'];
 }
 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
